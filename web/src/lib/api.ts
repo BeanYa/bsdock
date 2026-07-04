@@ -2,6 +2,12 @@ import { getToken, clearToken } from '@/lib/auth'
 
 const API_BASE = '/api/v1'
 
+export function getDefaultPanelURL(): string {
+  return window.location.origin === 'http://localhost:5173'
+    ? 'http://localhost:8080'
+    : window.location.origin
+}
+
 async function request(path: string, options: RequestInit = {}) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -40,5 +46,10 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ name, platform }),
       headers: { 'X-Panel-URL': panelURL },
+    }),
+  rotateToken: (id: string) =>
+    request(`/nodes/${id}/rotate-token`, {
+      method: 'POST',
+      headers: { 'X-Panel-URL': getDefaultPanelURL() },
     }),
 }

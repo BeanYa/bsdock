@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Plus, Search } from 'lucide-react'
+import { MoreHorizontal, Plus, Search } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useNodes } from '@/hooks/useNodes'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CopyButton } from '@/components/copy-button'
 import { EmptyState } from '@/components/empty-state'
+import { InstallCommandDisplay } from '@/components/install-command-card'
 import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
 import { useToast } from '@/hooks/use-toast'
@@ -20,6 +21,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Select,
   SelectContent,
@@ -44,6 +51,7 @@ type Node = {
   id: string
   name: string
   status: 'pending' | 'online' | 'offline'
+  platform?: string
   system_info?: Record<string, unknown>
   last_seen_at?: string
   created_at: string
@@ -71,6 +79,10 @@ function NodesPage() {
   const [submitting, setSubmitting] = useState(false)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [dialogCommand, setDialogCommand] = useState('')
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogLoading, setDialogLoading] = useState(false)
+  const [dialogNodeId, setDialogNodeId] = useState<string | null>(null)
 
   const filteredNodes = useMemo(() => {
     return (nodes as Node[]).filter((node) => {
@@ -105,6 +117,27 @@ function NodesPage() {
     if (!value) {
       setInstallCommand('')
       setName('')
+    }
+  }
+
+  const handleShowInstallCommand = async (nodeId: string) => {
+    setDialogLoading(true)
+    setDialogOpen(true)
+    setDialogCommand('')
+    setDialogNodeId(nodeId)
+    try {
+      const data = await api.rotateToken(nodeId)
+      setDialogCommand(data.install_command)
+    } catch (err) {
+      setDialogOpen(false)
+      setDialogNodeId(null)
+      toast({
+        title: '生成安装命令失败',
+        description: err instanceof Error ? err.message : '无法轮换 Token',
+        variant: 'destructive',
+      })
+    } finally {
+      setDialogLoading(false)
     }
   }
 
@@ -242,9 +275,27 @@ function NodesPage() {
                         {new Date(node.created_at).toLocaleString()}
                       </TableCell>
                       <TableCell>
-                        <Link to="/nodes/$nodeId" params={{ nodeId: node.id }}>
-                          <Button variant="ghost" size="sm">View</Button>
-                        </Link>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleShowInstallCommand(node.id)}>
+                              Install Command
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleShowInstallCommand(node.id)}>
+                              Rotate Token
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link to="/nodes/$nodeId" params={{ nodeId: node.id }}>
+                                View Details
+                              </Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
@@ -254,6 +305,24 @@ function NodesPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={dialogOpen} onOpenChange={(value) => {
+        setDialogOpen(value)
+        if (!value) setDialogNodeId(null)
+      }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Install Command</DialogTitle>
+          </DialogHeader>
+          <InstallCommandDisplay
+            installCommand={dialogCommand}
+            loading={dialogLoading}
+            onGenerate={() => {
+              if (dialogNodeId) handleShowInstallCommand(dialogNodeId)
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
