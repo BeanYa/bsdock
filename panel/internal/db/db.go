@@ -7,9 +7,6 @@ package db
 import (
 	"context"
 	"database/sql"
-	"fmt"
-
-	_ "modernc.org/sqlite"
 )
 
 type DBTX interface {
@@ -31,18 +28,4 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
 		db: tx,
 	}
-}
-
-func Open(path string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", path+"?_pragma=foreign_keys(1)")
-	if err != nil {
-		return nil, fmt.Errorf("open sqlite: %w", err)
-	}
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("ping sqlite: %w", err)
-	}
-	if _, err := db.Exec(schema); err != nil {
-		return nil, fmt.Errorf("migrate schema: %w", err)
-	}
-	return db, nil
 }
