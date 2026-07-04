@@ -2,29 +2,38 @@
 
 ## Project overview
 
-The project root directory (`C:/universe/workspace/repo/bsdock`) is currently empty. No source files, configuration files, build scripts, tests, or documentation were found. As a result, there is no runtime architecture, technology stack, module structure, or development workflow to report at this time.
+BSDock is a Panel-Node management platform with a monorepo layout:
+
+- `panel/` – Go backend (`github.com/bsdock/panel`)
+- `agent/` – Go agent (`github.com/bsdock/agent`)
+- `web/` – Vite + React + TanStack Router + Tailwind CSS + shadcn/ui frontend
+- `go.work` – Go workspace including `panel/`, `agent/`, and `web/`
+- `package.json` – Root bun scripts
 
 ## Build and test commands
 
-No build system or test runner is configured. Once a stack is chosen (for example Python with `pyproject.toml`, Node.js with `package.json`, Rust with `Cargo.toml`, etc.), record the relevant commands here:
-
-- Build: `TBD`
-- Test: `TBD`
-- Lint: `TBD`
-- Run: `TBD`
+- Build all: `bun run build`
+- Run: `bun run dev`
+- Backend tests: `cd panel && go test ./...`
+- Agent tests: `cd agent && go test ./...`
+- Frontend unit tests: `cd web && bun run test`
+- E2E tests: `cd web && bun run e2e` (requires `bunx playwright install chromium`)
 
 ## Code style guidelines
 
-Not yet defined. Establish formatting, linting, and naming conventions after the project structure is created.
+- Go: standard formatting via `gofmt`, follow Go conventions
+- TypeScript/React: use strict TypeScript, functional components, and shadcn/ui primitives
+- Tailwind: prefer utility classes over custom CSS; use CSS variables for theming
 
 ## Testing instructions
 
-No tests exist. Add a `tests/` directory or equivalent and document the runner once configured.
+- Write backend/agent tests with the standard Go testing package.
+- Add frontend component tests with Vitest + Testing Library when logic warrants it.
+- E2E tests live in `web/tests/e2e/` and use Playwright.
+- On Windows, Device Guard may block spawned panel binaries during local E2E runs; CI runs on Linux are the canonical E2E environment.
 
 ## Security considerations
 
-No code or dependencies are present, so no security surface exists yet. When the project is initialized, review dependency sources, secrets handling, and deployment posture.
-
----
-
-*Last updated: project directory was empty at the time of exploration.*
+- JWT secrets and admin credentials must be set via environment variables or config file; never commit secrets.
+- WebSocket `CheckOrigin` currently allows all origins; configure for production.
+- Agent install tokens are single-use and expire based on configuration.

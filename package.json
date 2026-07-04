@@ -5,7 +5,7 @@
     "dev": "concurrently \"bun run dev:panel\" \"bun run dev:web\"",
     "dev:panel": "cd panel && go run ./cmd/panel",
     "dev:web": "cd web && bun run dev",
-    "build": "bun run build:web && bun run build:panel && bun run build:agent",
+    "build": "bun run build:web && bun run build:panel && bun run build:agent:amd64 && bun run build:agent:arm64",
     "build:web": "cd web && bun run build",
     "build:panel": "cd panel && go build -o ../dist/panel ./cmd/panel",
     "build:agent:amd64": "cd agent && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ../dist/bsdock-agent-linux-amd64 ./cmd/agent",
