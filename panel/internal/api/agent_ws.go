@@ -51,11 +51,15 @@ func (h *AgentWSHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nodeRow, err := h.queries.GetNode(r.Context(), claims.NodeID)
-	if err != nil || nodeRow.TokenUsed {
+	if err != nil {
 		http.Error(w, "invalid token", http.StatusUnauthorized)
 		return
 	}
 	if nodeRow.TokenHash != hashToken(token) {
+		http.Error(w, "invalid token", http.StatusUnauthorized)
+		return
+	}
+	if nodeRow.TokenUsed {
 		http.Error(w, "invalid token", http.StatusUnauthorized)
 		return
 	}

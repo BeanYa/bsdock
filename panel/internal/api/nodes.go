@@ -1,7 +1,9 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -117,7 +119,11 @@ func (h *NodesHandler) RotateToken(w http.ResponseWriter, r *http.Request) {
 
 	n, token, err := h.svc.RotateToken(r.Context(), vars["id"], h.cfg.JWT.Secret, h.cfg.JWT.ExpireHours)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "node not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

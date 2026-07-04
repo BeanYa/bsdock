@@ -121,14 +121,29 @@
 
 ### Agent 认证（更新后）
 
+**WebSocket 初始连接**
+
 ```
 Agent 携带 Token 连接
   → ParseInstallToken
   → GetNode
-  → 若 token_used 为 true → 拒绝
   → 若 sha256(token) != node.token_hash → 拒绝
+  → 若 token_used 为 true → 拒绝（安装 Token 单次使用）
   → MarkInstallTokenUsed + UpdateNodeStatus(online)
 ```
+
+**HTTP / Poll 上报**
+
+```
+Agent 携带 Token 上报
+  → ParseInstallToken
+  → GetNode
+  → 若 sha256(token) != node.token_hash → 拒绝（Token 已轮换/撤销）
+  → 若 token_used 为 false → 标记已使用并输出安装成功日志
+  → 更新系统信息与 last_seen_at
+```
+
+HTTP / Poll 模式需要持续使用同一 Token 上报，因此只校验 Hash，不拒绝 `token_used == true`。
 
 ### 状态转换（更新后）
 
