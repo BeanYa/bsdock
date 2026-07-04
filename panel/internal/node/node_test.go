@@ -22,7 +22,7 @@ func newTestDB(t *testing.T) *db.Queries {
 func TestCreateNode(t *testing.T) {
 	queries := newTestDB(t)
 	svc := NewService(queries)
-	node, token, err := svc.Create(context.Background(), "srv-01", "https://panel.local", "secret", 24)
+	node, token, err := svc.Create(context.Background(), "srv-01", "linux", "secret", 24)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,10 +40,10 @@ func TestCreateNode(t *testing.T) {
 func TestListNodes(t *testing.T) {
 	queries := newTestDB(t)
 	svc := NewService(queries)
-	if _, _, err := svc.Create(context.Background(), "srv-01", "https://panel.local", "secret", 24); err != nil {
+	if _, _, err := svc.Create(context.Background(), "srv-01", "linux", "secret", 24); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := svc.Create(context.Background(), "srv-02", "https://panel.local", "secret", 24); err != nil {
+	if _, _, err := svc.Create(context.Background(), "srv-02", "linux", "secret", 24); err != nil {
 		t.Fatal(err)
 	}
 	nodes, err := svc.List()

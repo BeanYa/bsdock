@@ -12,6 +12,7 @@ import (
 type Node struct {
 	ID         string         `json:"id"`
 	Name       string         `json:"name"`
+	Platform   string         `json:"platform"`
 	Status     string         `json:"status"`
 	TokenHash  string         `json:"token_hash"`
 	SystemInfo sql.NullString `json:"system_info"`

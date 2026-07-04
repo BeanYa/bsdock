@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -54,6 +55,10 @@ func (h *AgentWSHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid token", http.StatusUnauthorized)
 		return
 	}
+	if nodeRow.TokenHash != hashToken(token) {
+		http.Error(w, "invalid token", http.StatusUnauthorized)
+		return
+	}
 
 	ws, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -70,6 +75,7 @@ func (h *AgentWSHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("node %s installed and online via websocket", claims.NodeID)
 	h.broadcastNodeUpdate(claims.NodeID)
 
 	for {
@@ -85,9 +91,6 @@ func (h *AgentWSHandler) Handle(w http.ResponseWriter, r *http.Request) {
 			h.queries.UpdateNodeStatus(r.Context(), db.UpdateNodeStatusParams{Status: "online", ID: claims.NodeID})
 		}
 	}
-
-	h.queries.UpdateNodeStatus(r.Context(), db.UpdateNodeStatusParams{Status: "offline", ID: claims.NodeID})
-	h.broadcastNodeUpdate(claims.NodeID)
 }
 
 func (h *AgentWSHandler) handleRegister(nodeID string, msg map[string]interface{}) {

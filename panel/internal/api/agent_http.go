@@ -105,8 +105,13 @@ func (h *AgentHTTPHandler) handle(w http.ResponseWriter, r *http.Request, isPoll
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+	if nodeRow.TokenHash != hashToken(payload.Token) {
+		http.Error(w, "invalid token", http.StatusUnauthorized)
+		return
+	}
 
 	// First report marks token used and activates the node.
+	wasTokenUsed := nodeRow.TokenUsed
 	if !nodeRow.TokenUsed {
 		if err := qtx.MarkInstallTokenUsed(ctx, claims.NodeID); err != nil {
 			log.Printf("agent report: mark install token used: %v", err)
@@ -153,6 +158,10 @@ func (h *AgentHTTPHandler) handle(w http.ResponseWriter, r *http.Request, isPoll
 		log.Printf("agent report: commit transaction: %v", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
+	}
+
+	if !wasTokenUsed {
+		log.Printf("node %s installed and online via http", claims.NodeID)
 	}
 
 	next := 30

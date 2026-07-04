@@ -36,7 +36,7 @@ func TestAgentHTTPReport(t *testing.T) {
 	_, _, _, svc, r := setupAgentHandler(t)
 
 	ctx := t.Context()
-	created, token, err := svc.Create(ctx, "srv-01", "https://panel.local", "secret", 1)
+	created, token, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func TestAgentPull(t *testing.T) {
 	_, _, _, svc, r := setupAgentHandler(t)
 
 	ctx := t.Context()
-	created, token, err := svc.Create(ctx, "srv-01", "https://panel.local", "secret", 1)
+	created, token, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +151,7 @@ func TestAgentReportTokenReuse(t *testing.T) {
 	_, _, _, svc, r := setupAgentHandler(t)
 
 	ctx := t.Context()
-	created, token, err := svc.Create(ctx, "srv-01", "https://panel.local", "secret", 1)
+	created, token, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -190,7 +190,7 @@ func TestAgentReportDoesNotStoreToken(t *testing.T) {
 	_, _, _, svc, r := setupAgentHandler(t)
 
 	ctx := t.Context()
-	created, token, err := svc.Create(ctx, "srv-01", "https://panel.local", "secret", 1)
+	created, token, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -234,7 +234,7 @@ func TestAgentReportNextReportSeconds(t *testing.T) {
 	_, _, _, svc, r := setupAgentHandler(t)
 
 	ctx := t.Context()
-	_, token, err := svc.Create(ctx, "srv-01", "https://panel.local", "secret", 1)
+	_, token, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -281,4 +281,37 @@ func TestAgentReportNextReportSeconds(t *testing.T) {
 			t.Fatalf("expected next_report_seconds=10, got %v", resp["next_report_seconds"])
 		}
 	})
+}
+
+func TestAgentReportInvalidTokenHash(t *testing.T) {
+	_, queries, _, svc, r := setupAgentHandler(t)
+
+	ctx := t.Context()
+	created, originalToken, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Manually change the stored token hash so the original token no longer matches.
+	if _, err := queries.RotateInstallToken(ctx, db.RotateInstallTokenParams{
+		ID:        created.ID,
+		TokenHash: "deadbeef",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	payload := map[string]interface{}{
+		"token":    originalToken,
+		"hostname": "srv-01",
+		"os":       "linux",
+		"arch":     "amd64",
+	}
+	body, _ := json.Marshal(payload)
+	req := httptest.NewRequest("POST", "/api/v1/agent/report", bytes.NewReader(body))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d: %s", rec.Code, rec.Body.String())
+	}
 }

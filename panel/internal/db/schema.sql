@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS nodes (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
+    platform TEXT NOT NULL DEFAULT 'linux',
     status TEXT NOT NULL CHECK(status IN ('pending', 'online', 'offline')),
     token_hash TEXT NOT NULL,
     system_info TEXT,
