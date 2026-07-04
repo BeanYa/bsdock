@@ -37,7 +37,7 @@ func (c *Client) runWebSocket(ctx context.Context, info *collector.SystemInfo) e
 		log.Printf("agent websocket register error: %v", err)
 		return err
 	}
-	log.Printf("agent connected to panel via websocket: %s", u.String())
+	log.Printf("agent connected to panel via websocket: %s", c.cfg.PanelURL)
 
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
