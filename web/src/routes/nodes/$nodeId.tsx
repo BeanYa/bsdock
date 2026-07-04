@@ -1,7 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { ArrowLeft } from 'lucide-react'
 import { useNode } from '@/hooks/useNode'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/page-header'
+import { StatusBadge } from '@/components/status-badge'
 
 export const Route = createFileRoute('/nodes/$nodeId')({
   component: NodeDetailPage,
@@ -9,20 +13,59 @@ export const Route = createFileRoute('/nodes/$nodeId')({
 
 function NodeDetailPage() {
   const { nodeId } = Route.useParams()
-  const { node } = useNode(nodeId)
+  const { node, loading } = useNode(nodeId)
 
-  if (!node) return <div className="text-muted-foreground">Loading...</div>
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-10" />
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-6 w-20" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-6 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (!node) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+        <h2 className="text-lg font-medium">Node not found</h2>
+        <p className="mt-1 text-sm text-muted-foreground">The requested node does not exist or has been removed.</p>
+        <Link to="/nodes">
+          <Button className="mt-4">Back to Nodes</Button>
+        </Link>
+      </div>
+    )
+  }
 
   const info = node.system_info || {}
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <h1 className="text-2xl font-bold">{node.name}</h1>
-        <Badge variant={node.status === 'online' ? 'default' : node.status === 'offline' ? 'destructive' : 'secondary'}>
-          {node.status}
-        </Badge>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title={node.name}
+        description="Node details and system information"
+      >
+        <StatusBadge status={node.status} />
+        <Link to="/nodes">
+          <Button variant="outline" size="icon">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </Link>
+      </PageHeader>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         <InfoCard title="Hostname" value={String(info.hostname || '-')} />
@@ -45,7 +88,7 @@ function InfoCard({ title, value }: { title: string; value?: string }) {
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-lg font-semibold">{value || '-'}</p>
+        <p className="text-lg font-semibold break-words font-mono tabular-nums">{value || '-'}</p>
       </CardContent>
     </Card>
   )
