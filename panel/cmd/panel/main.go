@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -21,6 +22,29 @@ import (
 	"github.com/bsdock/panel/internal/node"
 	wshub "github.com/bsdock/panel/internal/websocket"
 )
+
+// resolveAgentBinDir finds the directory containing agent binaries.
+// It supports both the built binary layout (<project>/dist/panel) and
+// the dev layout when running via `go run` from the panel/ subdirectory.
+func resolveAgentBinDir() string {
+	// Built binary layout: executable is at <project>/dist/panel.
+	if exe, err := os.Executable(); err == nil {
+		binDir := filepath.Join(filepath.Dir(exe), "..", "dist")
+		if info, err := os.Stat(binDir); err == nil && info.IsDir() {
+			return binDir
+		}
+	}
+
+	// Dev layout: this file is panel/cmd/panel/main.go, so project root is three levels up.
+	if _, file, _, ok := runtime.Caller(0); ok {
+		binDir := filepath.Join(filepath.Dir(file), "..", "..", "..", "dist")
+		if info, err := os.Stat(binDir); err == nil && info.IsDir() {
+			return binDir
+		}
+	}
+
+	return "dist"
+}
 
 func main() {
 	cfg, err := config.Load("")
@@ -91,13 +115,7 @@ func main() {
 	}).Methods("GET")
 
 	// Agent binaries (no auth)
-	agentBinDir := "dist"
-	if exe, err := os.Executable(); err == nil {
-		binDir := filepath.Join(filepath.Dir(exe), "..", "dist")
-		if info, err := os.Stat(binDir); err == nil && info.IsDir() {
-			agentBinDir = binDir
-		}
-	}
+	agentBinDir := resolveAgentBinDir()
 	r.PathPrefix("/static/agent/").Handler(http.StripPrefix("/static/agent/", http.FileServer(http.Dir(agentBinDir))))
 
 	// Static files (no auth)
