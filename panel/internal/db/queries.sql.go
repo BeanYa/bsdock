@@ -157,12 +157,57 @@ func (q *Queries) ListNodes(ctx context.Context) ([]Node, error) {
 	return items, nil
 }
 
+const listStaleOnlineNodes = `-- name: ListStaleOnlineNodes :many
+SELECT id, name, status, token_hash, system_info, token_used, last_seen_at, created_at FROM nodes WHERE status = 'online' AND (last_seen_at IS NULL OR last_seen_at < ?) ORDER BY created_at DESC
+`
+
+func (q *Queries) ListStaleOnlineNodes(ctx context.Context, lastSeenAt sql.NullTime) ([]Node, error) {
+	rows, err := q.db.QueryContext(ctx, listStaleOnlineNodes, lastSeenAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Node
+	for rows.Next() {
+		var i Node
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Status,
+			&i.TokenHash,
+			&i.SystemInfo,
+			&i.TokenUsed,
+			&i.LastSeenAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const markInstallTokenUsed = `-- name: MarkInstallTokenUsed :exec
 UPDATE nodes SET token_used = TRUE WHERE id = ?
 `
 
 func (q *Queries) MarkInstallTokenUsed(ctx context.Context, id string) error {
 	_, err := q.db.ExecContext(ctx, markInstallTokenUsed, id)
+	return err
+}
+
+const markNodeOffline = `-- name: MarkNodeOffline :exec
+UPDATE nodes SET status = 'offline' WHERE id = ? AND status = 'online'
+`
+
+func (q *Queries) MarkNodeOffline(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, markNodeOffline, id)
 	return err
 }
 

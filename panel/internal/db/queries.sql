@@ -23,5 +23,11 @@ UPDATE nodes SET system_info = ?, last_seen_at = CURRENT_TIMESTAMP WHERE id = ?;
 -- name: MarkInstallTokenUsed :exec
 UPDATE nodes SET token_used = TRUE WHERE id = ?;
 
+-- name: ListStaleOnlineNodes :many
+SELECT id, name, status, token_hash, system_info, token_used, last_seen_at, created_at FROM nodes WHERE status = 'online' AND (last_seen_at IS NULL OR last_seen_at < ?) ORDER BY created_at DESC;
+
+-- name: MarkNodeOffline :exec
+UPDATE nodes SET status = 'offline' WHERE id = ? AND status = 'online';
+
 -- name: CreateNodeReport :one
 INSERT INTO node_reports (node_id, payload) VALUES (?, ?) RETURNING id, node_id, payload, reported_at;

@@ -59,6 +59,7 @@ func main() {
 	nodeSvc := node.NewService(queries)
 	hub := wshub.NewHub()
 	go hub.Run()
+	api.StartHeartbeatMonitor(nodeSvc, queries, hub, cfg.Agent)
 
 	r := mux.NewRouter()
 

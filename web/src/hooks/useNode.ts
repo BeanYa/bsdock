@@ -6,8 +6,8 @@ export function useNode(nodeId: string) {
   const [node, setNode] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  const load = async () => {
-    setLoading(true)
+  const load = async (silent = false) => {
+    if (!silent) setLoading(true)
 
     try {
       const data = await api.getNode(nodeId)
@@ -15,7 +15,7 @@ export function useNode(nodeId: string) {
     } catch (err) {
       console.error(err)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
@@ -48,7 +48,7 @@ export function useNode(nodeId: string) {
       ws.onclose = () => {
         ws = null
         if (!interval) {
-          interval = setInterval(load, 3000)
+          interval = setInterval(() => load(true), 3000)
         }
       }
       ws.onerror = () => {
