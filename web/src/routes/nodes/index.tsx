@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { api } from '@/lib/api'
+import { useNodes } from '@/hooks/useNodes'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,25 +37,12 @@ type Node = {
 }
 
 function NodesPage() {
-  const [nodes, setNodes] = useState<Node[]>([])
+  const { nodes, reload } = useNodes()
   const [name, setName] = useState('')
   const [panelURL, setPanelURL] = useState(window.location.origin)
   const [installCommand, setInstallCommand] = useState('')
   const [open, setOpen] = useState(false)
   const [error, setError] = useState('')
-
-  const load = async () => {
-    try {
-      const data = await api.getNodes()
-      setNodes(data as Node[])
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load nodes')
-    }
-  }
-
-  useEffect(() => {
-    load()
-  }, [])
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,7 +51,7 @@ function NodesPage() {
       const data = await api.createNode(name, panelURL)
       setInstallCommand(data.install_command)
       setName('')
-      load()
+      reload()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create node')
     }
@@ -122,7 +110,7 @@ function NodesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {nodes.map((node) => (
+              {(nodes as Node[]).map((node) => (
                 <TableRow key={node.id}>
                   <TableCell>{node.name}</TableCell>
                   <TableCell><StatusBadge status={node.status} /></TableCell>

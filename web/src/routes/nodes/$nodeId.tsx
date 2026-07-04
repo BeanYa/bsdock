@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { api } from '@/lib/api'
+import { useNode } from '@/hooks/useNode'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
@@ -8,32 +7,10 @@ export const Route = createFileRoute('/nodes/$nodeId')({
   component: NodeDetailPage,
 })
 
-type NodeDetail = {
-  id: string
-  name: string
-  status: 'pending' | 'online' | 'offline'
-  system_info?: Record<string, unknown>
-}
-
 function NodeDetailPage() {
   const { nodeId } = Route.useParams()
-  const [node, setNode] = useState<NodeDetail | null>(null)
-  const [error, setError] = useState('')
+  const { node } = useNode(nodeId)
 
-  const load = async () => {
-    try {
-      const data = await api.getNode(nodeId)
-      setNode(data as NodeDetail)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load node')
-    }
-  }
-
-  useEffect(() => {
-    load()
-  }, [nodeId])
-
-  if (error) return <div className="text-destructive">{error}</div>
   if (!node) return <div className="text-muted-foreground">Loading...</div>
 
   const info = node.system_info || {}

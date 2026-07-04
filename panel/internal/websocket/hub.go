@@ -51,6 +51,12 @@ func (h *Hub) Run() {
 				default:
 				}
 			}
+			for ch := range h.clients["*"] {
+				select {
+				case ch <- b.data:
+				default:
+				}
+			}
 		}
 	}
 }
