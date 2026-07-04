@@ -4,13 +4,18 @@ import { getToken } from '@/lib/auth'
 
 export function useNodes() {
   const [nodes, setNodes] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   const load = async () => {
+    setLoading(true)
+
     try {
       const data = await api.getNodes()
       setNodes(data)
     } catch (err) {
       console.error(err)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -59,5 +64,5 @@ export function useNodes() {
     }
   }, [])
 
-  return { nodes, reload: load }
+  return { nodes, loading, reload: load }
 }
