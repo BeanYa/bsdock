@@ -166,3 +166,53 @@ func TestAgentWebSocketTokenAlreadyUsed(t *testing.T) {
 		t.Fatalf("expected 401, got %d", resp.StatusCode)
 	}
 }
+
+func TestAgentWebSocketDisconnectDoesNotMarkOffline(t *testing.T) {
+	sqlDB, _ := db.Open(":memory:")
+	defer sqlDB.Close()
+	queries := db.New(sqlDB)
+	cfg := &config.Config{JWT: config.JWT{Secret: "secret", ExpireHours: 1}}
+	svc := node.NewService(queries)
+	hub := panelws.NewHub()
+	go hub.Run()
+
+	h := NewAgentWSHandler(svc, queries, cfg, hub)
+	r := mux.NewRouter()
+	h.Register(r)
+
+	ctx := t.Context()
+	created, token, err := svc.Create(ctx, "srv-01", "linux", cfg.JWT.Secret, cfg.JWT.ExpireHours)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	server := httptest.NewServer(r)
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	u.Scheme = "ws"
+	u.Path = "/api/v1/agent/ws"
+	u.RawQuery = "token=" + token
+
+	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Wait briefly for the server to mark the node online.
+	time.Sleep(100 * time.Millisecond)
+
+	// Close the WebSocket connection.
+	ws.Close()
+
+	// Wait briefly to give any post-disconnect handlers time to run.
+	time.Sleep(100 * time.Millisecond)
+
+	node, err := svc.Get(created.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if node.Status != "online" {
+		t.Fatalf("expected node to remain online after disconnect, got %s", node.Status)
+	}
+}

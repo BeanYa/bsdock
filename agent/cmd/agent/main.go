@@ -29,8 +29,7 @@ func main() {
 	}
 
 	if err := setupLogging(); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to set up logging: %v\n", err)
-		os.Exit(1)
+		fmt.Fprintf(os.Stderr, "warning: falling back to stderr logging: %v\n", err)
 	}
 
 	client := transport.NewClient(&cfg)

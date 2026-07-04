@@ -30,7 +30,7 @@ func NewRotatingFileWriter(path string, maxSize int64) (*RotatingFileWriter, err
 		return nil, fmt.Errorf("create log directory: %w", err)
 	}
 
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("open log file: %w", err)
 	}
@@ -105,7 +105,7 @@ func (w *RotatingFileWriter) rotateLocked() error {
 // reopenLocked opens a new file at w.path and resets w.size. The caller must
 // hold w.mu.
 func (w *RotatingFileWriter) reopenLocked() error {
-	file, err := os.OpenFile(w.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(w.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		w.file = nil
 		w.size = 0
