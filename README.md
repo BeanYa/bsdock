@@ -62,10 +62,10 @@ bash <(curl -fsSL http://<panel-url>/install-agent.sh) --panel <panel-url> --tok
 ### Windows
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'http://<panel-url>/install-agent.ps1' -OutFile \"$env:TEMP\bsdock-install.ps1\" -UseBasicParsing; & \"$env:TEMP\bsdock-install.ps1\" -PanelURL '<panel-url>' -Token '<token>'"
+powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'http://<panel-url>/install-agent.ps1' -OutFile 'bsdock-install.ps1' -UseBasicParsing; .\bsdock-install.ps1 -PanelURL '<panel-url>' -Token '<token>'"
 ```
 
-> 请在 PowerShell 终端中执行 Windows 安装命令。如果从 Git Bash 等 bash 终端直接粘贴，`$env:TEMP` 会被 bash 当作空变量解析，导致出现 `:TEMP\bsdock-install.ps1` 路径错误。
+> 该命令会把安装脚本下载到当前目录并执行。请在 PowerShell 或 Git Bash 中粘贴执行。
 
 The agent will register itself, mark the node as `online`, and start reporting system information.
 

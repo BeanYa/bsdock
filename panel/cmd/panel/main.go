@@ -90,11 +90,13 @@ func main() {
 	}).Methods("GET")
 
 	// Agent binaries (no auth)
-	exe, err := os.Executable()
-	if err != nil {
-		log.Fatalf("get executable path: %v", err)
+	agentBinDir := "dist"
+	if exe, err := os.Executable(); err == nil {
+		binDir := filepath.Join(filepath.Dir(exe), "..", "dist")
+		if info, err := os.Stat(binDir); err == nil && info.IsDir() {
+			agentBinDir = binDir
+		}
 	}
-	agentBinDir := filepath.Join(filepath.Dir(exe), "..", "dist")
 	r.PathPrefix("/static/agent/").Handler(http.StripPrefix("/static/agent/", http.FileServer(http.Dir(agentBinDir))))
 
 	// Static files (no auth)

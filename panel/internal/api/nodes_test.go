@@ -2,14 +2,11 @@ package api
 
 import (
 	"bytes"
-	"encoding/base64"
-	"encoding/binary"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"unicode/utf16"
 
 	"github.com/gorilla/mux"
 
@@ -49,44 +46,28 @@ func TestCreateNodeHandler(t *testing.T) {
 	}
 }
 
-func decodePowerShellCommand(encoded string) (string, error) {
-	b, err := base64.StdEncoding.DecodeString(encoded)
-	if err != nil {
-		return "", err
-	}
-	u16 := make([]uint16, len(b)/2)
-	for i := range u16 {
-		u16[i] = binary.LittleEndian.Uint16(b[i*2:])
-	}
-	return string(utf16.Decode(u16)), nil
-}
-
-func TestBuildInstallCommandWindowsEncoded(t *testing.T) {
+func TestBuildInstallCommandWindows(t *testing.T) {
 	panelURL := "https://panel.example.com"
 	token := "test-token"
 	cmd := buildInstallCommand("windows", panelURL, token)
 
-	prefix := "powershell -ExecutionPolicy Bypass -EncodedCommand "
-	if !strings.HasPrefix(cmd, prefix) {
-		t.Fatalf("unexpected windows command prefix: %s", cmd)
-	}
-
-	decoded, err := decodePowerShellCommand(strings.TrimPrefix(cmd, prefix))
-	if err != nil {
-		t.Fatalf("failed to decode command: %v", err)
-	}
-	t.Logf("generated windows install command (raw):\n%s", cmd)
-	t.Logf("generated windows install command (decoded):\n%s", decoded)
+	t.Logf("generated windows install command:\n%s", cmd)
 
 	for _, want := range []string{
+		"powershell -ExecutionPolicy Bypass -Command",
 		"Invoke-WebRequest",
-		"bsdock-install.ps1",
+		"scripts/install-agent.ps1",
+		"-OutFile 'bsdock-install.ps1'",
+		".\\bsdock-install.ps1",
 		"-PanelURL '" + panelURL + "'",
 		"-Token '" + token + "'",
-		"$env:TEMP",
 	} {
-		if !strings.Contains(decoded, want) {
-			t.Errorf("decoded command missing %q:\n%s", want, decoded)
+		if !strings.Contains(cmd, want) {
+			t.Errorf("windows command missing %q:\n%s", want, cmd)
 		}
+	}
+
+	if strings.Contains(cmd, "$env:TEMP") {
+		t.Errorf("windows command should not rely on $env:TEMP, which bash will swallow:\n%s", cmd)
 	}
 }

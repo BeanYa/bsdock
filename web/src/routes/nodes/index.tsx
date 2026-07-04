@@ -60,7 +60,11 @@ function NodesPage() {
   const { nodes, loading, reload } = useNodes()
   const { toast } = useToast()
   const [name, setName] = useState('')
-  const [panelURL, setPanelURL] = useState(window.location.origin)
+  const defaultPanelURL =
+    window.location.origin === 'http://localhost:5173'
+      ? 'http://localhost:8080'
+      : window.location.origin
+  const [panelURL, setPanelURL] = useState(defaultPanelURL)
   const [platform, setPlatform] = useState('linux')
   const [installCommand, setInstallCommand] = useState('')
   const [open, setOpen] = useState(false)
