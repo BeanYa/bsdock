@@ -21,7 +21,8 @@ func TestCreateNodeHandler(t *testing.T) {
 	cfg := &config.Config{JWT: config.JWT{Secret: "test-secret", ExpireHours: 1}}
 	h := NewNodesHandler(svc, cfg)
 	r := mux.NewRouter()
-	h.Register(r)
+	apiRouter := r.PathPrefix("/api/v1").Subrouter()
+	h.Register(apiRouter)
 
 	body := []byte(`{"name":"srv-01"}`)
 	req := httptest.NewRequest("POST", "/api/v1/nodes", bytes.NewReader(body))

@@ -30,9 +30,9 @@ type createNodeResponse struct {
 }
 
 func (h *NodesHandler) Register(r *mux.Router) {
-	r.HandleFunc("/api/v1/nodes", h.Create).Methods("POST")
-	r.HandleFunc("/api/v1/nodes", h.List).Methods("GET")
-	r.HandleFunc("/api/v1/nodes/{id}", h.Get).Methods("GET")
+	r.HandleFunc("/nodes", h.Create).Methods("POST")
+	r.HandleFunc("/nodes", h.List).Methods("GET")
+	r.HandleFunc("/nodes/{id}", h.Get).Methods("GET")
 }
 
 func (h *NodesHandler) Create(w http.ResponseWriter, r *http.Request) {
