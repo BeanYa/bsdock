@@ -10,6 +10,10 @@ BSDock is a Panel-Node management platform with a monorepo layout:
 - `go.work` – Go workspace including `panel/`, `agent/`, and `web/`
 - `package.json` – Root bun scripts
 
+## 沟通语言
+
+所有面向用户的回复、说明和交互必须使用中文。代码、命令、文件路径、标识符和技术术语保持原始形式不变。
+
 ## Build and test commands
 
 - Build all: `bun run build`
