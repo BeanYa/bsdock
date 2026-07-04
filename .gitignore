@@ -6,5 +6,7 @@ node_modules/
 web/dist/
 panel/dist/
 agent/dist/
+web/.e2e-test/
+web/test-results/
 .DS_Store
 *.exe

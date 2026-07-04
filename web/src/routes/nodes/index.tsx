@@ -78,11 +78,11 @@ function NodesPage() {
               <form onSubmit={handleCreate} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="node-name">Name</Label>
-                  <Input id="node-name" value={name} onChange={(e) => setName(e.target.value)} required />
+                  <Input id="node-name" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="panel-url">Panel URL</Label>
-                  <Input id="panel-url" value={panelURL} onChange={(e) => setPanelURL(e.target.value)} required />
+                  <Input id="panel-url" placeholder="Panel URL" value={panelURL} onChange={(e) => setPanelURL(e.target.value)} required />
                 </div>
                 <Button type="submit" className="w-full">Create</Button>
               </form>
