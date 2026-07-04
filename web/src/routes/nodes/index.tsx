@@ -159,7 +159,7 @@ function NodesPage() {
             ) : (
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">Run this command on the target server:</p>
-                <pre className="max-h-48 overflow-auto rounded-md bg-muted p-3 text-xs">
+                <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-md bg-muted p-3 text-xs">
                   <code>{installCommand}</code>
                 </pre>
                 <CopyButton text={installCommand} className="w-full" />

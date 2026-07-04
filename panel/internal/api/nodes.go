@@ -69,15 +69,17 @@ func (h *NodesHandler) Create(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, createNodeResponse{Node: *n, InstallCommand: cmd})
 }
 
+const githubRawBase = "https://raw.githubusercontent.com/BeanYa/bsdock/main"
+
 func buildInstallCommand(platform, panelURL, token string) string {
 	switch platform {
 	case "windows":
 		return fmt.Sprintf(
-			`powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri '%s/install-agent.ps1' -OutFile \"$env:TEMP\bsdock-install.ps1\" -UseBasicParsing; & \"$env:TEMP\bsdock-install.ps1\" -PanelURL '%s' -Token '%s'"`,
-			panelURL, panelURL, token,
+			`powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri '%s/scripts/install-agent.ps1' -OutFile \"$env:TEMP\bsdock-install.ps1\" -UseBasicParsing; & \"$env:TEMP\bsdock-install.ps1\" -PanelURL '%s' -Token '%s'"`,
+			githubRawBase, panelURL, token,
 		)
 	default:
-		return fmt.Sprintf("bash <(curl -fsSL %s/install-agent.sh) --panel %s --token %s", panelURL, panelURL, token)
+		return fmt.Sprintf("bash <(curl -fsSL %s/scripts/install-agent.sh) --panel %s --token %s", githubRawBase, panelURL, token)
 	}
 }
 
