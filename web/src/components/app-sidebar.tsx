@@ -73,6 +73,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
     <>
       {/* Desktop sidebar */}
       <aside
+        data-testid="desktop-sidebar"
         className={cn(
           'fixed left-0 top-0 z-40 hidden h-screen flex-col border-r bg-card transition-all duration-300 ease-in-out lg:flex',
           collapsed ? 'w-16' : 'w-64'
@@ -89,7 +90,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             onClick={onMobileClose}
             aria-hidden="true"
           />
-          <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r bg-card lg:hidden">
+          <aside data-testid="mobile-sidebar" className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r bg-card lg:hidden">
             <div className="flex h-14 items-center justify-between border-b px-3">
               <Link to="/" className="flex items-center gap-2 font-bold" onClick={onMobileClose}>
                 <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
