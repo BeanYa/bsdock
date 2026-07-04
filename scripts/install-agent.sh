@@ -28,18 +28,36 @@ case "$ARCH" in
   *) echo "Unsupported arch: $ARCH"; exit 1 ;;
 esac
 
-INSTALL_DIR="/opt/bsdock-agent"
+INSTANCE_ID=$(printf '%s' "$PANEL_URL" | md5sum | cut -c1-8)
+INSTALL_DIR="/opt/bsdock-agent/${INSTANCE_ID}"
 BIN_NAME="bsdock-agent-linux-${BIN_ARCH}"
 BIN_URL="${PANEL_URL}/static/agent/${BIN_NAME}"
+SERVICE_NAME="bsdock-agent-${INSTANCE_ID}"
+SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+
+LEGACY_SERVICE="/etc/systemd/system/bsdock-agent.service"
+if [[ -f "$LEGACY_SERVICE" ]] && grep -qF -- "--panel $PANEL_URL" "$LEGACY_SERVICE"; then
+  echo "Stopping legacy bsdock-agent service ..."
+  if systemctl is-active --quiet bsdock-agent 2>/dev/null; then
+    systemctl stop bsdock-agent
+  fi
+  systemctl disable bsdock-agent 2>/dev/null || true
+  rm -f "$LEGACY_SERVICE"
+fi
+
+if systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null; then
+  echo "Stopping existing $SERVICE_NAME service ..."
+  systemctl stop "$SERVICE_NAME"
+fi
 
 mkdir -p "$INSTALL_DIR"
 echo "Downloading agent from $BIN_URL ..."
 curl -fsSL "$BIN_URL" -o "${INSTALL_DIR}/bsdock-agent"
 chmod +x "${INSTALL_DIR}/bsdock-agent"
 
-cat > /etc/systemd/system/bsdock-agent.service <<EOF
+cat > "$SERVICE_FILE" <<EOF
 [Unit]
-Description=BSDock Agent
+Description=BSDock Agent (${PANEL_URL})
 After=network.target
 
 [Service]
@@ -53,7 +71,7 @@ WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable bsdock-agent
-systemctl restart bsdock-agent
+systemctl enable "$SERVICE_NAME"
+systemctl restart "$SERVICE_NAME"
 
-echo "Agent installed and started."
+echo "Agent installed and started as $SERVICE_NAME."
