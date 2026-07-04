@@ -163,11 +163,11 @@ func (q *Queries) ListNodes(ctx context.Context) ([]Node, error) {
 }
 
 const listStaleOnlineNodes = `-- name: ListStaleOnlineNodes :many
-SELECT id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at FROM nodes WHERE status = 'online' AND (last_seen_at IS NULL OR last_seen_at < ?) ORDER BY created_at DESC
+SELECT id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at FROM nodes WHERE status = 'online' AND (last_seen_at IS NULL OR datetime(last_seen_at) < datetime(?)) ORDER BY created_at DESC
 `
 
-func (q *Queries) ListStaleOnlineNodes(ctx context.Context, lastSeenAt sql.NullTime) ([]Node, error) {
-	rows, err := q.db.QueryContext(ctx, listStaleOnlineNodes, lastSeenAt)
+func (q *Queries) ListStaleOnlineNodes(ctx context.Context, datetime interface{}) ([]Node, error) {
+	rows, err := q.db.QueryContext(ctx, listStaleOnlineNodes, datetime)
 	if err != nil {
 		return nil, err
 	}

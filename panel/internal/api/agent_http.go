@@ -32,6 +32,7 @@ func (h *AgentHTTPHandler) Register(r *mux.Router) {
 }
 
 type agentReportPayload struct {
+	Type      string   `json:"type"`
 	Token     string   `json:"token"`
 	Hostname  string   `json:"hostname"`
 	OS        string   `json:"os"`
@@ -120,33 +121,36 @@ func (h *AgentHTTPHandler) handle(w http.ResponseWriter, r *http.Request, isPoll
 		}
 	}
 
-	info := agentSystemInfo{
-		Hostname:  payload.Hostname,
-		OS:        payload.OS,
-		Arch:      payload.Arch,
-		Kernel:    payload.Kernel,
-		CPUModel:  payload.CPUModel,
-		CPUCores:  payload.CPUCores,
-		Memory:    payload.Memory,
-		DiskTotal: payload.DiskTotal,
-		DiskFree:  payload.DiskFree,
-		IPs:       payload.IPs,
-		Uptime:    payload.Uptime,
-	}
-	data, err := json.Marshal(info)
-	if err != nil {
-		log.Printf("agent report: marshal system info: %v", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
+	// Heartbeats only refresh liveness. Full reports/polls carry system info.
+	if payload.Type != "heartbeat" {
+		info := agentSystemInfo{
+			Hostname:  payload.Hostname,
+			OS:        payload.OS,
+			Arch:      payload.Arch,
+			Kernel:    payload.Kernel,
+			CPUModel:  payload.CPUModel,
+			CPUCores:  payload.CPUCores,
+			Memory:    payload.Memory,
+			DiskTotal: payload.DiskTotal,
+			DiskFree:  payload.DiskFree,
+			IPs:       payload.IPs,
+			Uptime:    payload.Uptime,
+		}
+		data, err := json.Marshal(info)
+		if err != nil {
+			log.Printf("agent report: marshal system info: %v", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 
-	if err := qtx.UpdateNodeSystemInfo(ctx, db.UpdateNodeSystemInfoParams{
-		SystemInfo: sql.NullString{String: string(data), Valid: true},
-		ID:         claims.NodeID,
-	}); err != nil {
-		log.Printf("agent report: update system info: %v", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
+		if err := qtx.UpdateNodeSystemInfo(ctx, db.UpdateNodeSystemInfoParams{
+			SystemInfo: sql.NullString{String: string(data), Valid: true},
+			ID:         claims.NodeID,
+		}); err != nil {
+			log.Printf("agent report: update system info: %v", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 	}
 	if err := qtx.UpdateNodeStatus(ctx, db.UpdateNodeStatusParams{Status: "online", ID: claims.NodeID}); err != nil {
 		log.Printf("agent report: update status: %v", err)

@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -281,6 +282,62 @@ func TestAgentReportNextReportSeconds(t *testing.T) {
 			t.Fatalf("expected next_report_seconds=10, got %v", resp["next_report_seconds"])
 		}
 	})
+}
+
+func TestAgentHeartbeatDoesNotOverwriteSystemInfo(t *testing.T) {
+	_, _, _, svc, r := setupAgentHandler(t)
+
+	ctx := t.Context()
+	created, token, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Initial report carries system information.
+	payload := map[string]interface{}{
+		"token":    token,
+		"hostname": "srv-01",
+		"os":       "linux",
+		"arch":     "amd64",
+	}
+	body, _ := json.Marshal(payload)
+	req := httptest.NewRequest("POST", "/api/v1/agent/report", bytes.NewReader(body))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	n, err := svc.Get(created.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n.SystemInfo == nil {
+		t.Fatal("expected system_info after initial report")
+	}
+	originalInfo := string(n.SystemInfo)
+
+	// Heartbeat payloads only contain the token and should not wipe system_info.
+	heartbeat := map[string]interface{}{
+		"type":      "heartbeat",
+		"timestamp": time.Now().UTC().Format(time.RFC3339),
+		"token":     token,
+	}
+	body, _ = json.Marshal(heartbeat)
+	req = httptest.NewRequest("POST", "/api/v1/agent/report", bytes.NewReader(body))
+	rec = httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for heartbeat, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	n, err = svc.Get(created.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(n.SystemInfo) != originalInfo {
+		t.Fatalf("heartbeat overwrote system_info: got %s, want %s", string(n.SystemInfo), originalInfo)
+	}
 }
 
 func TestAgentReportInvalidTokenHash(t *testing.T) {

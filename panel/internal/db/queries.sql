@@ -28,7 +28,7 @@ UPDATE nodes SET token_hash = ?, token_used = FALSE WHERE id = ?
 RETURNING id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at;
 
 -- name: ListStaleOnlineNodes :many
-SELECT id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at FROM nodes WHERE status = 'online' AND (last_seen_at IS NULL OR last_seen_at < ?) ORDER BY created_at DESC;
+SELECT id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at FROM nodes WHERE status = 'online' AND (last_seen_at IS NULL OR datetime(last_seen_at) < datetime(?)) ORDER BY created_at DESC;
 
 -- name: MarkNodeOffline :exec
 UPDATE nodes SET status = 'offline' WHERE id = ? AND status = 'online';
