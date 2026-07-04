@@ -80,6 +80,17 @@ func main() {
 	nodesHandler := api.NewNodesHandler(nodeSvc, cfg)
 	nodesHandler.Register(apiRouter)
 
+	// Install scripts (no auth)
+	r.HandleFunc("/install-agent.sh", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "scripts/install-agent.sh")
+	}).Methods("GET")
+	r.HandleFunc("/install-agent.ps1", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "scripts/install-agent.ps1")
+	}).Methods("GET")
+
+	// Agent binaries (no auth)
+	r.PathPrefix("/static/agent/").Handler(http.StripPrefix("/static/agent/", http.FileServer(http.Dir("./dist"))))
+
 	// Static files (no auth)
 	static, err := api.StaticHandler()
 	if err != nil {

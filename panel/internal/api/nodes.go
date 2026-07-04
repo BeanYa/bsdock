@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 
@@ -21,7 +22,8 @@ func NewNodesHandler(svc *node.Service, cfg *config.Config) *NodesHandler {
 }
 
 type createNodeRequest struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
+	Platform string `json:"platform"`
 }
 
 type createNodeResponse struct {
@@ -57,9 +59,26 @@ func (h *NodesHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cmd := fmt.Sprintf("bash <(curl -fsSL https://raw.githubusercontent.com/<org>/<repo>/main/scripts/install-agent.sh) --panel %s --token %s", panelURL, token)
+	platform := strings.ToLower(req.Platform)
+	if platform != "windows" {
+		platform = "linux"
+	}
+
+	cmd := buildInstallCommand(platform, panelURL, token)
 
 	respondJSON(w, createNodeResponse{Node: *n, InstallCommand: cmd})
+}
+
+func buildInstallCommand(platform, panelURL, token string) string {
+	switch platform {
+	case "windows":
+		return fmt.Sprintf(
+			`powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri '%s/install-agent.ps1' -OutFile \"$env:TEMP\bsdock-install.ps1\" -UseBasicParsing; & \"$env:TEMP\bsdock-install.ps1\" -PanelURL '%s' -Token '%s'"`,
+			panelURL, panelURL, token,
+		)
+	default:
+		return fmt.Sprintf("bash <(curl -fsSL %s/install-agent.sh) --panel %s --token %s", panelURL, panelURL, token)
+	}
 }
 
 func (h *NodesHandler) List(w http.ResponseWriter, r *http.Request) {

@@ -40,6 +40,7 @@ function NodesPage() {
   const { nodes, reload } = useNodes()
   const [name, setName] = useState('')
   const [panelURL, setPanelURL] = useState(window.location.origin)
+  const [platform, setPlatform] = useState('linux')
   const [installCommand, setInstallCommand] = useState('')
   const [open, setOpen] = useState(false)
   const [error, setError] = useState('')
@@ -48,7 +49,7 @@ function NodesPage() {
     e.preventDefault()
     setError('')
     try {
-      const data = await api.createNode(name, panelURL)
+      const data = await api.createNode(name, panelURL, platform)
       setInstallCommand(data.install_command)
       setName('')
       reload()
@@ -83,6 +84,18 @@ function NodesPage() {
                 <div className="space-y-2">
                   <Label htmlFor="panel-url">Panel URL</Label>
                   <Input id="panel-url" placeholder="Panel URL" value={panelURL} onChange={(e) => setPanelURL(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="platform">Platform</Label>
+                  <select
+                    id="platform"
+                    value={platform}
+                    onChange={(e) => setPlatform(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="linux">Linux</option>
+                    <option value="windows">Windows</option>
+                  </select>
                 </div>
                 <Button type="submit" className="w-full">Create</Button>
               </form>

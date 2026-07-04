@@ -35,10 +35,10 @@ export const api = {
     }),
   getNodes: () => request('/nodes'),
   getNode: (id: string) => request(`/nodes/${id}`),
-  createNode: (name: string, panelURL: string) =>
+  createNode: (name: string, panelURL: string, platform: string) =>
     request('/nodes', {
       method: 'POST',
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, platform }),
       headers: { 'X-Panel-URL': panelURL },
     }),
 }

@@ -51,10 +51,18 @@ admin:
 
 ## Agent install command
 
-After creating a node in the panel, run the generated command on the target server:
+After creating a node in the panel, run the generated command on the target server. The command uses the panel's own install scripts, so no external hosting is required.
+
+### Linux
 
 ```bash
-bash <(curl -fsSL https://<panel>/install-agent.sh) --panel <panel-url> --token <token>
+bash <(curl -fsSL http://<panel-url>/install-agent.sh) --panel <panel-url> --token <token>
+```
+
+### Windows
+
+```powershell
+powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'http://<panel-url>/install-agent.ps1' -OutFile \"$env:TEMP\bsdock-install.ps1\" -UseBasicParsing; & \"$env:TEMP\bsdock-install.ps1\" -PanelURL '<panel-url>' -Token '<token>'"
 ```
 
 The agent will register itself, mark the node as `online`, and start reporting system information.
@@ -71,9 +79,9 @@ Set `--mode auto` (default) to let the agent try WebSocket first and fall back t
 
 ## Deployment
 
-The panel is distributed as a single static binary (`dist/panel`) that embeds the built frontend. Agent binaries are built for `linux/amd64` and `linux/arm64`.
+The panel is distributed as a single static binary (`dist/panel`) that embeds the built frontend. Agent binaries are built for `linux/amd64`, `linux/arm64`, and `windows/amd64`.
 
-Releases are created automatically by `.github/workflows/release.yml` when a `v*` tag is pushed.
+CI is run automatically by `.github/workflows/ci.yml` on every push and pull request.
 
 ## Testing
 
