@@ -6,8 +6,8 @@ jwt:
   secret: ""
   expire_hours: 24
 admin:
-  username: ""
-  password: ""
+  username: "admin"
+  password: "admin123"
 agent:
   allowed_modes: ["websocket", "http", "pull"]
   default_mode: "auto"

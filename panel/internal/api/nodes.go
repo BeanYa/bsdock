@@ -1,10 +1,13 @@
 package api
 
 import (
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
+	"unicode/utf16"
 
 	"github.com/gorilla/mux"
 
@@ -74,13 +77,25 @@ const githubRawBase = "https://raw.githubusercontent.com/BeanYa/bsdock/main"
 func buildInstallCommand(platform, panelURL, token string) string {
 	switch platform {
 	case "windows":
-		return fmt.Sprintf(
-			`powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri '%s/scripts/install-agent.ps1' -OutFile \"$env:TEMP\bsdock-install.ps1\" -UseBasicParsing; & \"$env:TEMP\bsdock-install.ps1\" -PanelURL '%s' -Token '%s'"`,
+		script := fmt.Sprintf(
+			`Invoke-WebRequest -Uri '%s/scripts/install-agent.ps1' -OutFile "$env:TEMP\bsdock-install.ps1" -UseBasicParsing; & "$env:TEMP\bsdock-install.ps1" -PanelURL '%s' -Token '%s'`,
 			githubRawBase, panelURL, token,
 		)
+		return fmt.Sprintf("powershell -ExecutionPolicy Bypass -EncodedCommand %s", encodePowerShellCommand(script))
 	default:
 		return fmt.Sprintf("bash <(curl -fsSL %s/scripts/install-agent.sh) --panel %s --token %s", githubRawBase, panelURL, token)
 	}
+}
+
+// encodePowerShellCommand encodes a PowerShell script for use with the
+// -EncodedCommand switch. It expects the command text as UTF-16LE bytes.
+func encodePowerShellCommand(script string) string {
+	u16 := utf16.Encode([]rune(script))
+	b := make([]byte, len(u16)*2)
+	for i, c := range u16 {
+		binary.LittleEndian.PutUint16(b[i*2:], c)
+	}
+	return base64.StdEncoding.EncodeToString(b)
 }
 
 func (h *NodesHandler) List(w http.ResponseWriter, r *http.Request) {

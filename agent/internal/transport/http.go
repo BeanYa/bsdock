@@ -12,7 +12,7 @@ import (
 
 func (c *Client) runHTTP(ctx context.Context, info *collector.SystemInfo) error {
 	endpoint := c.cfg.PanelURL + "/api/v1/agent/report"
-	if err := c.post(ctx, endpoint, c.buildPayload(info)); err != nil {
+	if err := c.post(ctx, endpoint, c.buildReportPayload(info)); err != nil {
 		return err
 	}
 

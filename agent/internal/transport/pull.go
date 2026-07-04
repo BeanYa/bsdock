@@ -19,7 +19,7 @@ func (c *Client) runPull(ctx context.Context, info *collector.SystemInfo) error 
 		default:
 		}
 
-		b := jsonBytes(c.buildPayload(info))
+		b := jsonBytes(c.buildReportPayload(info))
 		req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(b))
 		if err != nil {
 			return err

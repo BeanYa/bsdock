@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -89,7 +90,12 @@ func main() {
 	}).Methods("GET")
 
 	// Agent binaries (no auth)
-	r.PathPrefix("/static/agent/").Handler(http.StripPrefix("/static/agent/", http.FileServer(http.Dir("./dist"))))
+	exe, err := os.Executable()
+	if err != nil {
+		log.Fatalf("get executable path: %v", err)
+	}
+	agentBinDir := filepath.Join(filepath.Dir(exe), "..", "dist")
+	r.PathPrefix("/static/agent/").Handler(http.StripPrefix("/static/agent/", http.FileServer(http.Dir(agentBinDir))))
 
 	// Static files (no auth)
 	static, err := api.StaticHandler()

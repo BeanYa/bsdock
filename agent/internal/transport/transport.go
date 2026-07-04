@@ -78,10 +78,28 @@ func (c *Client) buildPayload(info *collector.SystemInfo) map[string]interface{}
 	}
 }
 
+func (c *Client) buildReportPayload(info *collector.SystemInfo) map[string]interface{} {
+	return map[string]interface{}{
+		"token":        c.cfg.Token,
+		"hostname":     info.Hostname,
+		"os":           info.OS,
+		"arch":         info.Arch,
+		"kernel":       info.Kernel,
+		"cpu_model":    info.CPUModel,
+		"cpu_cores":    info.CPUCores,
+		"memory_total": info.MemoryTotal,
+		"disk_total":   info.DiskTotal,
+		"disk_free":    info.DiskFree,
+		"ips":          info.IPs,
+		"uptime":       info.Uptime,
+	}
+}
+
 func (c *Client) buildHeartbeat() map[string]interface{} {
 	return map[string]interface{}{
 		"type":      "heartbeat",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
+		"token":     c.cfg.Token,
 	}
 }
 
