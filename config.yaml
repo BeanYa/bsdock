@@ -1,0 +1,17 @@
+mode: master
+port: "8080"
+database:
+  path: "./panel.db"
+jwt:
+  secret: ""
+  expire_hours: 24
+admin:
+  username: ""
+  password: ""
+agent:
+  allowed_modes: ["websocket", "http", "pull"]
+  default_mode: "auto"
+  heartbeat_timeout_seconds: 60
+  install_token_expire_hours: 24
+log:
+  level: info

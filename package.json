@@ -1,0 +1,22 @@
+{
+  "name": "bsdock",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"bun run dev:panel\" \"bun run dev:web\"",
+    "dev:panel": "cd panel && go run ./cmd/panel",
+    "dev:web": "cd web && bun run dev",
+    "build": "bun run build:web && bun run build:panel && bun run build:agent",
+    "build:web": "cd web && bun run build",
+    "build:panel": "cd panel && go build -o ../dist/panel ./cmd/panel",
+    "build:agent:amd64": "cd agent && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ../dist/bsdock-agent-linux-amd64 ./cmd/agent",
+    "build:agent:arm64": "cd agent && GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o ../dist/bsdock-agent-linux-arm64 ./cmd/agent",
+    "test": "bun run test:panel && bun run test:agent && bun run test:web",
+    "test:panel": "cd panel && go test ./...",
+    "test:agent": "cd agent && go test ./...",
+    "test:web": "cd web && bun run test",
+    "e2e": "cd web && bun run e2e"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

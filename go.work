@@ -1,0 +1,6 @@
+use (
+	./panel
+	./agent
+)
+
+go 1.24
