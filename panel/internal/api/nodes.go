@@ -1,7 +1,9 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -35,6 +37,11 @@ func (h *NodesHandler) Register(r *mux.Router) {
 	r.HandleFunc("/nodes", h.Create).Methods("POST")
 	r.HandleFunc("/nodes", h.List).Methods("GET")
 	r.HandleFunc("/nodes/{id}", h.Get).Methods("GET")
+	r.HandleFunc("/nodes/{id}/rotate-token", h.RotateToken).Methods("POST")
+}
+
+type rotateTokenResponse struct {
+	InstallCommand string `json:"install_command"`
 }
 
 func (h *NodesHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -53,18 +60,18 @@ func (h *NodesHandler) Create(w http.ResponseWriter, r *http.Request) {
 		panelURL = "https://panel.example.com"
 	}
 
-	n, token, err := h.svc.Create(r.Context(), req.Name, panelURL, h.cfg.JWT.Secret, h.cfg.JWT.ExpireHours)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	platform := strings.ToLower(req.Platform)
 	if platform != "windows" {
 		platform = "linux"
 	}
 
-	cmd := buildInstallCommand(platform, panelURL, token)
+	n, token, err := h.svc.Create(r.Context(), req.Name, platform, h.cfg.JWT.Secret, h.cfg.JWT.ExpireHours)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	cmd := buildInstallCommand(n.Platform, panelURL, token)
 
 	respondJSON(w, createNodeResponse{Node: *n, InstallCommand: cmd})
 }
@@ -100,4 +107,26 @@ func (h *NodesHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, n)
+}
+
+func (h *NodesHandler) RotateToken(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	panelURL := r.Header.Get("X-Panel-URL")
+	if panelURL == "" {
+		panelURL = "https://panel.example.com"
+	}
+
+	n, token, err := h.svc.RotateToken(r.Context(), vars["id"], h.cfg.JWT.Secret, h.cfg.JWT.ExpireHours)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "node not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	cmd := buildInstallCommand(n.Platform, panelURL, token)
+	respondJSON(w, rotateTokenResponse{InstallCommand: cmd})
 }

@@ -11,13 +11,14 @@ import (
 )
 
 const createNode = `-- name: CreateNode :one
-INSERT INTO nodes (id, name, status, token_hash) VALUES (?, ?, ?, ?)
-RETURNING id, name, status, token_hash, system_info, token_used, last_seen_at, created_at
+INSERT INTO nodes (id, name, platform, status, token_hash) VALUES (?, ?, ?, ?, ?)
+RETURNING id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at
 `
 
 type CreateNodeParams struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
+	Platform  string `json:"platform"`
 	Status    string `json:"status"`
 	TokenHash string `json:"token_hash"`
 }
@@ -26,6 +27,7 @@ func (q *Queries) CreateNode(ctx context.Context, arg CreateNodeParams) (Node, e
 	row := q.db.QueryRowContext(ctx, createNode,
 		arg.ID,
 		arg.Name,
+		arg.Platform,
 		arg.Status,
 		arg.TokenHash,
 	)
@@ -33,6 +35,7 @@ func (q *Queries) CreateNode(ctx context.Context, arg CreateNodeParams) (Node, e
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Platform,
 		&i.Status,
 		&i.TokenHash,
 		&i.SystemInfo,
@@ -86,7 +89,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const getNode = `-- name: GetNode :one
-SELECT id, name, status, token_hash, system_info, token_used, last_seen_at, created_at FROM nodes WHERE id = ? LIMIT 1
+SELECT id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at FROM nodes WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetNode(ctx context.Context, id string) (Node, error) {
@@ -95,6 +98,7 @@ func (q *Queries) GetNode(ctx context.Context, id string) (Node, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Platform,
 		&i.Status,
 		&i.TokenHash,
 		&i.SystemInfo,
@@ -122,7 +126,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 }
 
 const listNodes = `-- name: ListNodes :many
-SELECT id, name, status, token_hash, system_info, token_used, last_seen_at, created_at FROM nodes ORDER BY created_at DESC
+SELECT id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at FROM nodes ORDER BY created_at DESC
 `
 
 func (q *Queries) ListNodes(ctx context.Context) ([]Node, error) {
@@ -137,6 +141,7 @@ func (q *Queries) ListNodes(ctx context.Context) ([]Node, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Platform,
 			&i.Status,
 			&i.TokenHash,
 			&i.SystemInfo,
@@ -158,11 +163,11 @@ func (q *Queries) ListNodes(ctx context.Context) ([]Node, error) {
 }
 
 const listStaleOnlineNodes = `-- name: ListStaleOnlineNodes :many
-SELECT id, name, status, token_hash, system_info, token_used, last_seen_at, created_at FROM nodes WHERE status = 'online' AND (last_seen_at IS NULL OR last_seen_at < ?) ORDER BY created_at DESC
+SELECT id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at FROM nodes WHERE status = 'online' AND (last_seen_at IS NULL OR datetime(last_seen_at) < datetime(?)) ORDER BY created_at DESC
 `
 
-func (q *Queries) ListStaleOnlineNodes(ctx context.Context, lastSeenAt sql.NullTime) ([]Node, error) {
-	rows, err := q.db.QueryContext(ctx, listStaleOnlineNodes, lastSeenAt)
+func (q *Queries) ListStaleOnlineNodes(ctx context.Context, datetime interface{}) ([]Node, error) {
+	rows, err := q.db.QueryContext(ctx, listStaleOnlineNodes, datetime)
 	if err != nil {
 		return nil, err
 	}
@@ -173,6 +178,7 @@ func (q *Queries) ListStaleOnlineNodes(ctx context.Context, lastSeenAt sql.NullT
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Platform,
 			&i.Status,
 			&i.TokenHash,
 			&i.SystemInfo,
@@ -209,6 +215,33 @@ UPDATE nodes SET status = 'offline' WHERE id = ? AND status = 'online'
 func (q *Queries) MarkNodeOffline(ctx context.Context, id string) error {
 	_, err := q.db.ExecContext(ctx, markNodeOffline, id)
 	return err
+}
+
+const rotateInstallToken = `-- name: RotateInstallToken :one
+UPDATE nodes SET token_hash = ?, token_used = FALSE WHERE id = ?
+RETURNING id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at
+`
+
+type RotateInstallTokenParams struct {
+	TokenHash string `json:"token_hash"`
+	ID        string `json:"id"`
+}
+
+func (q *Queries) RotateInstallToken(ctx context.Context, arg RotateInstallTokenParams) (Node, error) {
+	row := q.db.QueryRowContext(ctx, rotateInstallToken, arg.TokenHash, arg.ID)
+	var i Node
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Platform,
+		&i.Status,
+		&i.TokenHash,
+		&i.SystemInfo,
+		&i.TokenUsed,
+		&i.LastSeenAt,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const updateNodeStatus = `-- name: UpdateNodeStatus :exec

@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -10,6 +12,12 @@ import (
 	"github.com/bsdock/panel/internal/auth"
 	"github.com/bsdock/panel/internal/config"
 )
+
+// hashToken returns the SHA256 hex digest of the provided token.
+func hashToken(token string) string {
+	h := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(h[:])
+}
 
 // respondJSON marshals v as JSON and writes it to w with a JSON content type.
 // Encoding errors are logged; headers may already be written so we cannot

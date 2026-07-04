@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"database/sql"
 	"log"
 	"time"
 
@@ -31,8 +30,11 @@ func StartHeartbeatMonitor(svc *node.Service, queries *db.Queries, hub *wshub.Hu
 
 		for range ticker.C {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			threshold := time.Now().Add(-timeout)
-			rows, err := queries.ListStaleOnlineNodes(ctx, sql.NullTime{Time: threshold, Valid: true})
+			// Format the threshold as a SQLite-recognized datetime string without
+			// the monotonic reading that Go time.Time carries; otherwise SQLite's
+			// datetime() function cannot parse the bound parameter.
+			threshold := time.Now().Add(-timeout).UTC().Format("2006-01-02 15:04:05")
+			rows, err := queries.ListStaleOnlineNodes(ctx, threshold)
 			cancel()
 			if err != nil {
 				log.Printf("heartbeat monitor: list stale nodes: %v", err)

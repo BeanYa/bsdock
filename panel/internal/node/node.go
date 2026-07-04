@@ -15,6 +15,7 @@ import (
 type Node struct {
 	ID         string          `json:"id"`
 	Name       string          `json:"name"`
+	Platform   string          `json:"platform"`
 	Status     string          `json:"status"`
 	TokenHash  string          `json:"-"`
 	SystemInfo json.RawMessage `json:"system_info,omitempty"`
@@ -31,7 +32,7 @@ func NewService(q *db.Queries) *Service {
 	return &Service{queries: q}
 }
 
-func (s *Service) Create(ctx context.Context, name, panelURL, jwtSecret string, expireHours int) (*Node, string, error) {
+func (s *Service) Create(ctx context.Context, name, platform, jwtSecret string, expireHours int) (*Node, string, error) {
 	idBytes := make([]byte, 16)
 	if _, err := rand.Read(idBytes); err != nil {
 		return nil, "", err
@@ -43,12 +44,17 @@ func (s *Service) Create(ctx context.Context, name, panelURL, jwtSecret string, 
 		return nil, "", err
 	}
 
+	if platform != "windows" {
+		platform = "linux"
+	}
+
 	hashBytes := sha256.Sum256([]byte(token))
 	tokenHash := hex.EncodeToString(hashBytes[:])
 
 	row, err := s.queries.CreateNode(ctx, db.CreateNodeParams{
 		ID:        id,
 		Name:      name,
+		Platform:  platform,
 		Status:    "pending",
 		TokenHash: tokenHash,
 	})
@@ -81,6 +87,31 @@ func (s *Service) Get(id string) (*Node, error) {
 	return &node, nil
 }
 
+func (s *Service) RotateToken(ctx context.Context, id, jwtSecret string, expireHours int) (*Node, string, error) {
+	if _, err := s.queries.GetNode(ctx, id); err != nil {
+		return nil, "", err
+	}
+
+	token, err := auth.GenerateInstallToken(jwtSecret, id, expireHours)
+	if err != nil {
+		return nil, "", err
+	}
+
+	hashBytes := sha256.Sum256([]byte(token))
+	tokenHash := hex.EncodeToString(hashBytes[:])
+
+	row, err := s.queries.RotateInstallToken(ctx, db.RotateInstallTokenParams{
+		ID:        id,
+		TokenHash: tokenHash,
+	})
+	if err != nil {
+		return nil, "", err
+	}
+
+	n := fromDB(row)
+	return &n, token, nil
+}
+
 func fromDB(row db.Node) Node {
 	var sysInfo json.RawMessage
 	if row.SystemInfo.Valid && row.SystemInfo.String != "" {
@@ -96,6 +127,7 @@ func fromDB(row db.Node) Node {
 	return Node{
 		ID:         row.ID,
 		Name:       row.Name,
+		Platform:   row.Platform,
 		Status:     row.Status,
 		TokenHash:  row.TokenHash,
 		SystemInfo: sysInfo,

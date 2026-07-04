@@ -1,9 +1,13 @@
+import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
+import { api } from '@/lib/api'
 import { useNode } from '@/hooks/useNode'
+import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { InstallCommandCard } from '@/components/install-command-card'
 import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
 
@@ -14,6 +18,25 @@ export const Route = createFileRoute('/nodes/$nodeId')({
 function NodeDetailPage() {
   const { nodeId } = Route.useParams()
   const { node, loading } = useNode(nodeId)
+  const { toast } = useToast()
+  const [installCommand, setInstallCommand] = useState('')
+  const [rotating, setRotating] = useState(false)
+
+  const handleRotateToken = async () => {
+    setRotating(true)
+    try {
+      const data = await api.rotateToken(nodeId)
+      setInstallCommand(data.install_command)
+    } catch (err) {
+      toast({
+        title: '生成安装命令失败',
+        description: err instanceof Error ? err.message : '无法轮换 Token',
+        variant: 'destructive',
+      })
+    } finally {
+      setRotating(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -76,7 +99,14 @@ function NodeDetailPage() {
         <InfoCard title="Disk" value={`${formatBytes(Number(info.disk_total))} total / ${formatBytes(Number(info.disk_free))} free`} />
         <InfoCard title="IPs" value={Array.isArray(info.ips) ? info.ips.join(', ') : '-'} />
         <InfoCard title="Uptime" value={`${info.uptime ?? '-'}s`} />
+        <InfoCard title="Platform" value={String(node.platform || '-')} />
       </div>
+
+      <InstallCommandCard
+        installCommand={installCommand}
+        loading={rotating}
+        onGenerate={handleRotateToken}
+      />
     </div>
   )
 }
