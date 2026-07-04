@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
+	"log"
 	"net/http"
 	"time"
 
@@ -12,17 +14,16 @@ import (
 	"github.com/bsdock/panel/internal/auth"
 	"github.com/bsdock/panel/internal/config"
 	"github.com/bsdock/panel/internal/db"
-	"github.com/bsdock/panel/internal/node"
 )
 
 type AgentHTTPHandler struct {
-	svc     *node.Service
+	db      *sql.DB
 	queries *db.Queries
 	cfg     *config.Config
 }
 
-func NewAgentHTTPHandler(svc *node.Service, queries *db.Queries, cfg *config.Config) *AgentHTTPHandler {
-	return &AgentHTTPHandler{svc: svc, queries: queries, cfg: cfg}
+func NewAgentHTTPHandler(sqlDB *sql.DB, queries *db.Queries, cfg *config.Config) *AgentHTTPHandler {
+	return &AgentHTTPHandler{db: sqlDB, queries: queries, cfg: cfg}
 }
 
 func (h *AgentHTTPHandler) Register(r *mux.Router) {
@@ -32,6 +33,22 @@ func (h *AgentHTTPHandler) Register(r *mux.Router) {
 
 type agentReportPayload struct {
 	Token     string   `json:"token"`
+	Hostname  string   `json:"hostname"`
+	OS        string   `json:"os"`
+	Arch      string   `json:"arch"`
+	Kernel    string   `json:"kernel"`
+	CPUModel  string   `json:"cpu_model"`
+	CPUCores  int      `json:"cpu_cores"`
+	Memory    int64    `json:"memory_total"`
+	DiskTotal int64    `json:"disk_total"`
+	DiskFree  int64    `json:"disk_free"`
+	IPs       []string `json:"ips"`
+	Uptime    int64    `json:"uptime"`
+}
+
+// agentSystemInfo contains the same fields as agentReportPayload minus the
+// install token. It is the shape persisted in the nodes.system_info column.
+type agentSystemInfo struct {
 	Hostname  string   `json:"hostname"`
 	OS        string   `json:"os"`
 	Arch      string   `json:"arch"`
@@ -66,33 +83,75 @@ func (h *AgentHTTPHandler) handle(w http.ResponseWriter, r *http.Request, isPoll
 		return
 	}
 
-	nodeRow, err := h.queries.GetNode(r.Context(), claims.NodeID)
-	if err != nil {
-		http.Error(w, "invalid token", http.StatusUnauthorized)
-		return
-	}
-
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	// First report marks token used and activates node
+	tx, err := h.db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Printf("agent report: begin transaction: %v", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+	qtx := h.queries.WithTx(tx)
+
+	nodeRow, err := qtx.GetNode(ctx, claims.NodeID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "invalid token", http.StatusUnauthorized)
+			return
+		}
+		log.Printf("agent report: get node: %v", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// First report marks token used and activates the node.
 	if !nodeRow.TokenUsed {
-		if err := h.queries.MarkInstallTokenUsed(ctx, claims.NodeID); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if err := qtx.MarkInstallTokenUsed(ctx, claims.NodeID); err != nil {
+			log.Printf("agent report: mark install token used: %v", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 	}
 
-	data, _ := json.Marshal(payload)
-	if err := h.queries.UpdateNodeSystemInfo(ctx, db.UpdateNodeSystemInfoParams{
+	info := agentSystemInfo{
+		Hostname:  payload.Hostname,
+		OS:        payload.OS,
+		Arch:      payload.Arch,
+		Kernel:    payload.Kernel,
+		CPUModel:  payload.CPUModel,
+		CPUCores:  payload.CPUCores,
+		Memory:    payload.Memory,
+		DiskTotal: payload.DiskTotal,
+		DiskFree:  payload.DiskFree,
+		IPs:       payload.IPs,
+		Uptime:    payload.Uptime,
+	}
+	data, err := json.Marshal(info)
+	if err != nil {
+		log.Printf("agent report: marshal system info: %v", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := qtx.UpdateNodeSystemInfo(ctx, db.UpdateNodeSystemInfoParams{
 		SystemInfo: sql.NullString{String: string(data), Valid: true},
 		ID:         claims.NodeID,
 	}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("agent report: update system info: %v", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	if err := h.queries.UpdateNodeStatus(ctx, db.UpdateNodeStatusParams{Status: "online", ID: claims.NodeID}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := qtx.UpdateNodeStatus(ctx, db.UpdateNodeStatusParams{Status: "online", ID: claims.NodeID}); err != nil {
+		log.Printf("agent report: update status: %v", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Printf("agent report: commit transaction: %v", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
