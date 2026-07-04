@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/bsdock/agent/internal/config"
+	rotlog "github.com/bsdock/agent/internal/log"
 	"github.com/bsdock/agent/internal/transport"
 )
 
@@ -21,7 +24,13 @@ func main() {
 	flag.Parse()
 
 	if cfg.PanelURL == "" || cfg.Token == "" {
-		log.Fatal("--panel and --token are required")
+		fmt.Fprintln(os.Stderr, "--panel and --token are required")
+		os.Exit(1)
+	}
+
+	if err := setupLogging(); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to set up logging: %v\n", err)
+		os.Exit(1)
 	}
 
 	client := transport.NewClient(&cfg)
@@ -39,4 +48,19 @@ func main() {
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	<-sig
 	cancel()
+}
+
+func setupLogging() error {
+	exe, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("determine executable path: %w", err)
+	}
+	logPath := filepath.Join(filepath.Dir(exe), "agent.log")
+
+	writer, err := rotlog.NewRotatingFileWriter(logPath, 2*1024*1024)
+	if err != nil {
+		return err
+	}
+	log.SetOutput(writer)
+	return nil
 }
