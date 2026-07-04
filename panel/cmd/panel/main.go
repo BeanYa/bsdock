@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -36,11 +38,20 @@ func main() {
 	if cfg.Admin.Username != "" && cfg.Admin.Password != "" {
 		_, err := queries.GetUserByUsername(context.Background(), cfg.Admin.Username)
 		if err != nil {
-			hash, _ := auth.HashPassword(cfg.Admin.Password)
-			_, _ = queries.CreateUser(context.Background(), db.CreateUserParams{
+			if !errors.Is(err, sql.ErrNoRows) {
+				log.Fatalf("bootstrap admin: check existing user: %v", err)
+			}
+			hash, err := auth.HashPassword(cfg.Admin.Password)
+			if err != nil {
+				log.Fatalf("bootstrap admin: hash password: %v", err)
+			}
+			if _, err := queries.CreateUser(context.Background(), db.CreateUserParams{
 				Username:     cfg.Admin.Username,
 				PasswordHash: hash,
-			})
+			}); err != nil {
+				log.Fatalf("bootstrap admin: create user: %v", err)
+			}
+			log.Printf("bootstrap admin user %q created", cfg.Admin.Username)
 		}
 	}
 
@@ -56,31 +67,29 @@ func main() {
 	agentHTTP := api.NewAgentHTTPHandler(sqlDB, queries, cfg)
 	agentHTTP.Register(r)
 
+	// Frontend WebSocket for real-time updates (public path; token validated in handler)
+	frontendWS := api.NewFrontendWSHandler(hub, cfg)
+	frontendWS.Register(r)
+
 	// API routes with auth
 	apiRouter := r.PathPrefix("/api/v1").Subrouter()
+	apiRouter.Use(api.AuthMiddleware(cfg))
 	authHandler := api.NewAuthHandler(queries, cfg)
 	apiRouter.HandleFunc("/login", authHandler.Login).Methods("POST")
 
 	nodesHandler := api.NewNodesHandler(nodeSvc, cfg)
 	nodesHandler.Register(apiRouter)
 
-	// Frontend WebSocket for real-time updates
-	frontendWS := api.NewFrontendWSHandler(hub)
-	frontendWS.Register(apiRouter)
-
-	// Static files
+	// Static files (no auth)
 	static, err := api.StaticHandler()
 	if err != nil {
 		log.Fatalf("static handler: %v", err)
 	}
 	r.PathPrefix("/").Handler(static)
 
-	// Middleware
-	handler := api.AuthMiddleware(cfg)(r)
-
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,
-		Handler: handler,
+		Handler: r,
 	}
 
 	go func() {

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 
@@ -11,9 +12,13 @@ import (
 )
 
 // respondJSON marshals v as JSON and writes it to w with a JSON content type.
+// Encoding errors are logged; headers may already be written so we cannot
+// send an HTTP error response at that point.
 func respondJSON(w http.ResponseWriter, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(v)
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		log.Printf("respondJSON: encode error: %v", err)
+	}
 }
 
 type contextKey string

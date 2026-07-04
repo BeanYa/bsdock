@@ -15,6 +15,7 @@ import (
 	"github.com/bsdock/panel/internal/auth"
 	"github.com/bsdock/panel/internal/config"
 	"github.com/bsdock/panel/internal/db"
+	wshub "github.com/bsdock/panel/internal/websocket"
 )
 
 func setupAuthTest(t *testing.T) (*db.Queries, *config.Config, *sql.DB) {
@@ -174,6 +175,42 @@ func TestStaticHandler(t *testing.T) {
 	}
 }
 
+func TestStaticFilesArePublic(t *testing.T) {
+	_, cfg, _ := setupAuthTest(t)
+
+	static, err := StaticHandler()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := mux.NewRouter()
+	apiRouter := r.PathPrefix("/api/v1").Subrouter()
+	apiRouter.Use(AuthMiddleware(cfg))
+	apiRouter.HandleFunc("/nodes", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}).Methods("GET")
+	r.PathPrefix("/").Handler(static)
+
+	// Static index should be reachable without auth
+	req := httptest.NewRequest("GET", "/", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected static 200, got %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "BSDock Panel") {
+		t.Fatal("expected static index.html content")
+	}
+
+	// Protected API should still require auth
+	req = httptest.NewRequest("GET", "/api/v1/nodes", nil)
+	rec = httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for nodes, got %d", rec.Code)
+	}
+}
+
 func TestAuthMiddlewareOnRouter(t *testing.T) {
 	queries, cfg, _ := setupAuthTest(t)
 	hash, _ := auth.HashPassword("admin123")
@@ -188,18 +225,17 @@ func TestAuthMiddlewareOnRouter(t *testing.T) {
 	authHandler := NewAuthHandler(queries, cfg)
 	r := mux.NewRouter()
 	apiRouter := r.PathPrefix("/api/v1").Subrouter()
+	apiRouter.Use(AuthMiddleware(cfg))
 	apiRouter.HandleFunc("/login", authHandler.Login).Methods("POST")
 	apiRouter.HandleFunc("/nodes", func(w http.ResponseWriter, r *http.Request) {
 		respondJSON(w, map[string]string{"ok": "yes"})
 	}).Methods("GET")
 
-	handler := AuthMiddleware(cfg)(r)
-
 	// Public login should work without auth
 	body := []byte(`{"username":"admin","password":"admin123"}`)
 	req := httptest.NewRequest("POST", "/api/v1/login", bytes.NewReader(body))
 	rec := httptest.NewRecorder()
-	handler.ServeHTTP(rec, req)
+	r.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected login 200, got %d: %s", rec.Code, rec.Body.String())
 	}
@@ -207,8 +243,53 @@ func TestAuthMiddlewareOnRouter(t *testing.T) {
 	// Protected route without auth should fail
 	req = httptest.NewRequest("GET", "/api/v1/nodes", nil)
 	rec = httptest.NewRecorder()
-	handler.ServeHTTP(rec, req)
+	r.ServeHTTP(rec, req)
 	if rec.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401 for nodes, got %d", rec.Code)
+	}
+}
+
+func TestFrontendWSRequiresToken(t *testing.T) {
+	queries, cfg, _ := setupAuthTest(t)
+	hash, _ := auth.HashPassword("admin123")
+	_, err := queries.CreateUser(context.Background(), db.CreateUserParams{
+		Username:     "admin",
+		PasswordHash: hash,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	hub := wshub.NewHub()
+	frontendWS := NewFrontendWSHandler(hub, cfg)
+	r := mux.NewRouter()
+	frontendWS.Register(r)
+
+	// Missing token should return 401
+	req := httptest.NewRequest("GET", "/ws?node_id=n1", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for missing token, got %d", rec.Code)
+	}
+
+	// Invalid token should return 401
+	req = httptest.NewRequest("GET", "/ws?node_id=n1&token=bad", nil)
+	rec = httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for invalid token, got %d", rec.Code)
+	}
+
+	// Missing node_id with valid token should return 400
+	token, err := auth.GenerateToken(cfg.JWT.Secret, "admin", cfg.JWT.ExpireHours)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req = httptest.NewRequest("GET", "/ws?token="+token, nil)
+	rec = httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for missing node_id, got %d", rec.Code)
 	}
 }
