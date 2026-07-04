@@ -46,8 +46,8 @@ function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
-      <div className="relative hidden flex-col justify-between bg-muted/30 p-10 lg:flex">
+    <div className="grid min-h-screen lg:grid-cols-[1.15fr_0.85fr]">
+      <div className="relative hidden flex-col justify-between bg-muted/30 p-12 lg:p-16 xl:p-20 lg:flex">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
         <div className="relative z-10">
           <div className="flex items-center gap-2 text-2xl font-bold">
@@ -57,7 +57,7 @@ function LoginPage() {
             BSDock
           </div>
         </div>
-        <div className="relative z-10 space-y-8">
+        <div className="relative z-10 w-full max-w-xl space-y-8">
           <div>
             <h2 className="text-3xl font-semibold tracking-tight">轻量 Panel-Node 管理平台</h2>
             <p className="mt-2 text-muted-foreground">
