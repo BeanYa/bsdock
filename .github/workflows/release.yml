@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install web dependencies
+        run: cd web && bun install
+
+      - name: Build frontend
+        run: bun run build:web
+
+      - name: Build panel binary
+        run: bun run build:panel
+
+      - name: Build agent binaries
+        run: |
+          bun run build:agent:amd64
+          bun run build:agent:arm64
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/panel
+            dist/bsdock-agent-linux-amd64
+            dist/bsdock-agent-linux-arm64
+          generate_release_notes: true
