@@ -71,7 +71,9 @@
    - 在 `agent/cmd/agent/main.go` 中实现或引入一个按大小滚动的文件写入器（`RotatingFileWriter`）。
    - 日志文件路径为 Agent 二进制所在目录下的 `agent.log`。
    - 单个文件上限 2MB，超过后重命名为 `agent.log.old` 并创建新文件。
+   - 日志文件权限设置为 `0600`，避免其他用户读取。
    - 通过 `log.SetOutput` 将标准日志输出重定向到该文件。
+   - 如果日志文件无法创建（如二进制目录只读），Agent 回退到标准错误输出继续运行，而不是直接退出。
 
 2. **安装/连接成功日志**
    - `agent/internal/transport/ws.go`：WebSocket 初始注册成功后打印 `agent connected to panel via websocket: <url>`。
