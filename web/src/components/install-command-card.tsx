@@ -1,4 +1,5 @@
-import { RotateCcw } from 'lucide-react'
+import { useState } from 'react'
+import { Check, Copy, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CopyButton } from '@/components/copy-button'
@@ -62,16 +63,29 @@ export function InstallCommandDisplay({ installCommand, loading, onGenerate }: I
 interface InstallCommandCardProps extends InstallCommandDisplayProps {}
 
 export function InstallCommandCard(props: InstallCommandCardProps) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(props.installCommand)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   return (
     <Card className="border-[#2A3546] bg-[#1F2833]">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between text-xs font-medium uppercase tracking-wider text-[#8892A0]">
           <span>Install Command</span>
           {props.installCommand && (
-            <CopyButton
-              text={props.installCommand}
-              className="h-7 border-[#2A3546] bg-[#0B0C10] px-2 text-[#C5C6C7] hover:bg-[#2A3546]"
-            />
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Copy"
+              onClick={handleCopy}
+              className="h-7 w-7 border-[#2A3546] bg-[#0B0C10] px-2 text-[#C5C6C7] hover:bg-[#2A3546]"
+            >
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            </Button>
           )}
         </CardTitle>
       </CardHeader>

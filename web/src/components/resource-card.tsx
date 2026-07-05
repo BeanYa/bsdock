@@ -16,16 +16,18 @@ function formatBytes(bytes?: number): string {
 }
 
 export function ResourceCard({ title, used, total }: ResourceCardProps) {
-  const ratio = used != null && total != null && total > 0 ? used / total : null
+  const safeUsed = Number.isFinite(used) ? used : null
+  const safeTotal = Number.isFinite(total) ? total : null
+  const ratio = safeUsed != null && safeTotal != null && safeTotal > 0 ? safeUsed / safeTotal : null
   let barColor = 'bg-[#39FF14]'
   if (ratio !== null && ratio > 0.9) barColor = 'bg-[#FF4D4D]'
   else if (ratio !== null && ratio > 0.7) barColor = 'bg-[#FFC107]'
 
   const valueText =
-    used != null && total != null
-      ? `${formatBytes(used)} / ${formatBytes(total)}`
-      : used != null
-      ? formatBytes(used)
+    safeUsed != null && safeTotal != null
+      ? `${formatBytes(safeUsed)} / ${formatBytes(safeTotal)}`
+      : safeUsed != null
+      ? formatBytes(safeUsed)
       : '—'
 
   return (

@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/status-badge'
 import { getStatusColorClasses, type NodeStatus } from '@/lib/status'
+import { formatRelativeTime } from '@/lib/time'
 import { cn } from '@/lib/utils'
 
 export type { NodeStatus }
@@ -29,21 +30,6 @@ interface NodeCardProps {
   onInstallCommand: (id: string) => void
   onReset: (id: string) => void
   onRotateToken: (id: string) => void
-}
-
-function formatRelativeTime(value?: string): string {
-  if (!value) return '—'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '—'
-  const now = new Date()
-  const seconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000))
-  if (seconds < 60) return 'just now'
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
 }
 
 function getPrimaryIP(info?: Record<string, unknown>): string {

@@ -18,8 +18,8 @@ describe('InfoCard', () => {
     expect(screen.getByText('—')).toBeInTheDocument()
   })
 
-  it('shows em dash when value is empty string', () => {
-    render(<InfoCard title="Hostname" value="" />)
-    expect(screen.getByText('—')).toBeInTheDocument()
+  it('shows the string zero instead of an em dash', () => {
+    render(<InfoCard title="Count" value="0" />)
+    expect(screen.getByText('0')).toBeInTheDocument()
   })
 })
