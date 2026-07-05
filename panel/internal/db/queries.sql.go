@@ -217,6 +217,33 @@ func (q *Queries) MarkNodeOffline(ctx context.Context, id string) error {
 	return err
 }
 
+const resetNode = `-- name: ResetNode :one
+UPDATE nodes SET token_hash = ?, token_used = FALSE, status = 'pending' WHERE id = ?
+RETURNING id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at
+`
+
+type ResetNodeParams struct {
+	TokenHash string `json:"token_hash"`
+	ID        string `json:"id"`
+}
+
+func (q *Queries) ResetNode(ctx context.Context, arg ResetNodeParams) (Node, error) {
+	row := q.db.QueryRowContext(ctx, resetNode, arg.TokenHash, arg.ID)
+	var i Node
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Platform,
+		&i.Status,
+		&i.TokenHash,
+		&i.SystemInfo,
+		&i.TokenUsed,
+		&i.LastSeenAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const rotateInstallToken = `-- name: RotateInstallToken :one
 UPDATE nodes SET token_hash = ?, token_used = FALSE WHERE id = ?
 RETURNING id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at

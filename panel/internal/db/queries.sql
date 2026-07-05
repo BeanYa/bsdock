@@ -27,6 +27,10 @@ UPDATE nodes SET token_used = TRUE WHERE id = ?;
 UPDATE nodes SET token_hash = ?, token_used = FALSE WHERE id = ?
 RETURNING id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at;
 
+-- name: ResetNode :one
+UPDATE nodes SET token_hash = ?, token_used = FALSE, status = 'pending' WHERE id = ?
+RETURNING id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at;
+
 -- name: ListStaleOnlineNodes :many
 SELECT id, name, platform, status, token_hash, system_info, token_used, last_seen_at, created_at FROM nodes WHERE status = 'online' AND (last_seen_at IS NULL OR datetime(last_seen_at) < datetime(?)) ORDER BY created_at DESC;
 
