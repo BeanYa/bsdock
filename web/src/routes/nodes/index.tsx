@@ -129,6 +129,28 @@ function NodesPage() {
     }
   }
 
+  const handleReset = async (nodeId: string) => {
+    setDialogLoading(true)
+    setDialogOpen(true)
+    setDialogCommand('')
+    setDialogNodeId(nodeId)
+    try {
+      const data = await api.resetNode(nodeId)
+      setDialogCommand(data.install_command)
+      toast({ title: '节点已重置，请使用新安装命令重新注册' })
+    } catch (err) {
+      setDialogOpen(false)
+      setDialogNodeId(null)
+      toast({
+        title: 'Reset 失败',
+        description: err instanceof Error ? err.message : '无法重置节点',
+        variant: 'destructive',
+      })
+    } finally {
+      setDialogLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <PageHeader title="Nodes" description="管理和监控所有已注册的节点">
@@ -256,9 +278,15 @@ function NodesPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleShowInstallCommand(node.id)}>
-                        Install Command
-                      </DropdownMenuItem>
+                      {node.status === 'online' ? (
+                        <DropdownMenuItem onClick={() => handleReset(node.id)}>
+                          Reset
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem onClick={() => handleShowInstallCommand(node.id)}>
+                          Install Command
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => handleShowInstallCommand(node.id)}>
                         Rotate Token
                       </DropdownMenuItem>
