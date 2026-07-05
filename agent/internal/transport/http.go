@@ -26,7 +26,12 @@ func (c *Client) runHTTP(ctx context.Context, info *collector.SystemInfo) error 
 			log.Printf("agent http disconnecting: %v", ctx.Err())
 			return ctx.Err()
 		case <-ticker.C:
-			if err := c.post(ctx, endpoint, c.buildHeartbeat()); err != nil {
+			latest, err := collector.Collect()
+			if err != nil {
+				log.Printf("agent http collect error: %v", err)
+				latest = info
+			}
+			if err := c.post(ctx, endpoint, c.buildReportPayload(latest)); err != nil {
 				return err
 			}
 		}
