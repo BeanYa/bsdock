@@ -70,6 +70,15 @@ async function mockApi(page: any) {
       })
     }
 
+    const resetMatch = url.match(/\/api\/v1\/nodes\/([^/]+)\/reset$/)
+    if (resetMatch && method === 'POST') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ install_command: 'curl -sSL http://example.com/install.sh | bash --token reset-token' }),
+      })
+    }
+
     return route.continue()
   })
 }
@@ -123,18 +132,32 @@ test.describe('responsive layout', () => {
     await expect(page.getByTestId('mobile-sidebar')).toBeHidden()
   })
 
-  test('nodes page has no invalid placeholder buttons and layout is reasonable', async ({ page }) => {
+  test('online node shows Reset menu and generates new install command', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
     await login(page)
 
-    await expect(page.locator('button:has-text("New Node")')).toBeVisible()
-    await expect(page.locator('input[placeholder="Search nodes..."]')).toBeVisible()
-    await expect(page.getByTestId('node-card').first()).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'web-server-01' })).toBeVisible()
+    const onlineCard = page.getByTestId('node-card').filter({ hasText: 'web-server-01' })
+    await expect(onlineCard).toBeVisible()
+    await onlineCard.getByRole('button', { name: 'Actions' }).click()
 
-    const emptyButtons = page.locator('button:empty:not([aria-label])')
-    const count = await emptyButtons.count()
-    expect(count).toBe(0)
+    await expect(page.getByRole('menuitem', { name: 'Reset' })).toBeVisible()
+    await expect(page.getByRole('menuitem', { name: 'Install Command' })).toBeHidden()
+
+    await page.getByRole('menuitem', { name: 'Reset' }).click()
+    await expect(page.getByText('Install Command')).toBeVisible()
+    await expect(page.locator('pre')).toContainText('--token')
+  })
+
+  test('offline node shows Install Command menu', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await login(page)
+
+    const offlineCard = page.getByTestId('node-card').filter({ hasText: 'db-server-01' })
+    await expect(offlineCard).toBeVisible()
+    await offlineCard.getByRole('button', { name: 'Actions' }).click()
+
+    await expect(page.getByRole('menuitem', { name: 'Install Command' })).toBeVisible()
+    await expect(page.getByRole('menuitem', { name: 'Reset' })).toBeHidden()
   })
 
   test('node detail cards adapt to screen size', async ({ page }) => {
