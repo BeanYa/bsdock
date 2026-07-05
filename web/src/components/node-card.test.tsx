@@ -101,7 +101,11 @@ describe('NodeCard', () => {
 
   it('falls back to dash for missing resource data', () => {
     renderCard(sparseNode)
-    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1)
+    const rings = screen.getAllByRole('img', { name: /unknown/i })
+    expect(rings).toHaveLength(3)
+    rings.forEach((ring) => {
+      expect(ring.parentElement).toHaveTextContent('—')
+    })
   })
 
   it('emits install command action when clicked', async () => {
