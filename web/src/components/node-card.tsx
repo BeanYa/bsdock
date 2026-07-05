@@ -1,7 +1,13 @@
-import { Eye, RotateCcw } from 'lucide-react'
+import { Eye, MoreHorizontal, RotateCcw } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { ResourceRing } from '@/components/resource-ring'
 import { StatusBadge } from '@/components/status-badge'
 import { getStatusColorClasses, type NodeStatus } from '@/lib/status'
@@ -54,7 +60,7 @@ function getDiskPercent(info?: Record<string, unknown>): number | null {
   return Math.min(100, Math.max(0, (used / total) * 100))
 }
 
-export function NodeCard({ node, onInstallCommand, onReset }: NodeCardProps) {
+export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: NodeCardProps) {
   const info = node.system_info
   const statusClasses = getStatusColorClasses(node.status)
   const isOnline = node.status === 'online'
@@ -92,6 +98,28 @@ export function NodeCard({ node, onInstallCommand, onReset }: NodeCardProps) {
             </h3>
           </div>
           <StatusBadge status={node.status} />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="pointer-events-auto -mr-2 -mt-1 h-8 w-8 shrink-0 text-[#8892A0] hover:bg-[#2A3546] hover:text-[#C5C6C7]"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">Actions</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="border-[#2A3546] bg-[#1F2833]">
+              <DropdownMenuItem onClick={() => onRotateToken(node.id)} className="focus:bg-[#2A3546] focus:text-[#C5C6C7]">
+                Rotate Token
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="focus:bg-[#2A3546] focus:text-[#C5C6C7]">
+                <Link to="/nodes/$nodeId" params={{ nodeId: node.id }}>
+                  View Details
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="mt-1 flex items-center gap-2 text-xs text-[#8892A0]">

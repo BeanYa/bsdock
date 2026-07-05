@@ -122,6 +122,14 @@ describe('NodeCard', () => {
     expect(onReset).toHaveBeenCalledWith('n1')
   })
 
+  it('opens actions menu with rotate token and view details', async () => {
+    const onRotateToken = vi.fn()
+    renderCard(baseNode, { onRotateToken })
+    await userEvent.click(screen.getByRole('button', { name: /actions/i }))
+    expect(screen.getByText('Rotate Token')).toBeInTheDocument()
+    expect(screen.getByText('View Details')).toBeInTheDocument()
+  })
+
   it('renders View Details link with correct target and params', () => {
     renderCard(baseNode)
     const link = screen.getByLabelText(/view details for prod-web-01/i)
