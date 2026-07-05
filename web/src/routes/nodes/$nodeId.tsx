@@ -15,6 +15,7 @@ import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
 import { InfoCard } from '@/components/info-card'
 import { ResourceCard } from '@/components/resource-card'
+import { ResourceRing } from '@/components/resource-ring'
 
 export const Route = createFileRoute('/nodes/$nodeId')({
   component: NodeDetailPage,
@@ -83,8 +84,8 @@ function NodeDetailPage() {
   }
 
   const info = node.system_info || {}
-  const memoryUsed = Number(info.memory_total) - Number(info.memory_free || 0)
-  const memoryTotal = Number(info.memory_total)
+  const memoryUsed = Number(info.memory_used || 0)
+  const memoryTotal = Number(info.memory_total || 0)
   const diskUsed = Number(info.disk_total) - Number(info.disk_free || 0)
   const diskTotal = Number(info.disk_total)
 
@@ -135,10 +136,16 @@ function NodeDetailPage() {
       {/* Resources */}
       <section>
         <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-[#8892A0]">Resources</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-lg border border-[#2A3546] bg-[#1F2833] p-4">
+          <div className="flex items-center justify-center gap-8">
+            <ResourceRing label="CPU" percent={info.cpu_percent as number | null} size="md" />
+            <ResourceRing label="MEM" percent={info.memory_total ? ((info.memory_used as number ?? 0) / (info.memory_total as number)) * 100 : null} size="md" />
+            <ResourceRing label="Disk" percent={diskTotal > 0 ? (diskUsed / diskTotal) * 100 : null} size="md" />
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <ResourceCard title="Memory" used={memoryUsed} total={memoryTotal} />
           <ResourceCard title="Disk" used={diskUsed} total={diskTotal} />
-          <InfoCard title="CPU Cores" value={info.cpu_cores != null ? String(info.cpu_cores) : undefined} />
         </div>
       </section>
 
