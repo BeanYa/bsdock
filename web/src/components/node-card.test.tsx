@@ -4,7 +4,26 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { NodeCard, type Node } from './node-card'
 
-afterEach(cleanup)
+const defaultMatchMedia = vi.fn().mockImplementation((query: string) => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addListener: vi.fn(),
+  removeListener: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  dispatchEvent: vi.fn(),
+}))
+
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: defaultMatchMedia,
+})
+
+afterEach(() => {
+  cleanup()
+  window.matchMedia = defaultMatchMedia
+})
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
@@ -88,6 +107,25 @@ describe('NodeCard', () => {
     expect(screen.getByText('Disk')).toBeInTheDocument()
   })
 
+  it('uses sm ring size on small viewports', () => {
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query === '(max-width: 639px)',
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }))
+    renderCard(baseNode)
+    const rings = screen.getAllByRole('img', { name: /^(CPU|MEM|Disk)/ })
+    expect(rings).toHaveLength(3)
+    rings.forEach((ring) => {
+      expect(ring).toHaveClass('w-12')
+    })
+  })
+
   it('exposes install command and reset buttons for online nodes', () => {
     renderCard(baseNode)
     expect(screen.getByRole('button', { name: /install command/i })).toBeInTheDocument()
@@ -106,6 +144,20 @@ describe('NodeCard', () => {
     rings.forEach((ring) => {
       expect(ring.parentElement).toHaveTextContent('—')
     })
+  })
+
+  it('calculates memory percent from used when free is absent', () => {
+    renderCard(baseNode)
+    expect(screen.getByText('25%')).toBeInTheDocument()
+  })
+
+  it('prefers memory_free over memory_used when both are present', () => {
+    const node: Node = {
+      ...baseNode,
+      system_info: { ...baseNode.system_info, memory_free: 8, memory_used: 4 },
+    }
+    renderCard(node)
+    expect(screen.getByText('50%')).toBeInTheDocument()
   })
 
   it('emits install command action when clicked', async () => {
@@ -128,6 +180,8 @@ describe('NodeCard', () => {
     await userEvent.click(screen.getByRole('button', { name: /actions/i }))
     expect(screen.getByText('Rotate Token')).toBeInTheDocument()
     expect(screen.getByText('View Details')).toBeInTheDocument()
+    await userEvent.click(screen.getByText('Rotate Token'))
+    expect(onRotateToken).toHaveBeenCalledWith('n1')
   })
 
   it('renders View Details link with correct target and params', () => {

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Eye, MoreHorizontal, RotateCcw } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
@@ -47,9 +48,15 @@ function getCpuPercent(info?: Record<string, unknown>): number | null {
 function getMemoryPercent(info?: Record<string, unknown>): number | null {
   const total = Number(info?.memory_total ?? NaN)
   const free = Number(info?.memory_free ?? NaN)
-  if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(free)) return null
-  const used = total - free
-  return Math.min(100, Math.max(0, (used / total) * 100))
+  const usedRaw = Number(info?.memory_used ?? NaN)
+  if (!Number.isFinite(total) || total <= 0) return null
+  if (Number.isFinite(free)) {
+    return Math.min(100, Math.max(0, ((total - free) / total) * 100))
+  }
+  if (Number.isFinite(usedRaw)) {
+    return Math.min(100, Math.max(0, (usedRaw / total) * 100))
+  }
+  return null
 }
 
 function getDiskPercent(info?: Record<string, unknown>): number | null {
@@ -60,10 +67,28 @@ function getDiskPercent(info?: Record<string, unknown>): number | null {
   return Math.min(100, Math.max(0, (used / total) * 100))
 }
 
+function useIsBelowSm() {
+  const [isBelow, setIsBelow] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(max-width: 639px)').matches
+  })
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 639px)')
+    const update = () => setIsBelow(media.matches)
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+
+  return isBelow
+}
+
 export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: NodeCardProps) {
   const info = node.system_info
   const statusClasses = getStatusColorClasses(node.status)
   const isOnline = node.status === 'online'
+  const ringSize = useIsBelowSm() ? 'sm' : 'md'
 
   return (
     <Card
@@ -131,9 +156,9 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
         </div>
 
         <div className="mt-4 flex items-center justify-center gap-4 sm:gap-5">
-          <ResourceRing label="CPU" percent={getCpuPercent(info)} />
-          <ResourceRing label="MEM" percent={getMemoryPercent(info)} />
-          <ResourceRing label="Disk" percent={getDiskPercent(info)} />
+          <ResourceRing label="CPU" percent={getCpuPercent(info)} size={ringSize} />
+          <ResourceRing label="MEM" percent={getMemoryPercent(info)} size={ringSize} />
+          <ResourceRing label="Disk" percent={getDiskPercent(info)} size={ringSize} />
         </div>
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center pointer-events-auto">
