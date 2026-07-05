@@ -197,3 +197,31 @@ describe('NodeCard', () => {
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1)
   })
 })
+
+const metricsNode: Node = {
+  id: 'n1',
+  name: 'node-1',
+  status: 'online',
+  platform: 'linux',
+  system_info: {
+    cpu_percent: 50,
+    memory_total: 8000000000,
+    memory_used: 4000000000,
+    memory_free: 4000000000,
+    disk_total: 100000000000,
+    disk_free: 50000000000,
+    ips: ['10.0.0.1'],
+  },
+  last_seen_at: new Date().toISOString(),
+  created_at: new Date().toISOString(),
+}
+
+describe('NodeCard metrics', () => {
+  it('shows CPU, MEM and Disk rings with percentages', () => {
+    renderCard(metricsNode)
+    expect(screen.getAllByText('50%')).toHaveLength(3)
+    expect(screen.getByText('CPU')).toBeInTheDocument()
+    expect(screen.getByText('MEM')).toBeInTheDocument()
+    expect(screen.getByText('Disk')).toBeInTheDocument()
+  })
+})
