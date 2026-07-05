@@ -38,6 +38,7 @@ func (h *NodesHandler) Register(r *mux.Router) {
 	r.HandleFunc("/nodes", h.List).Methods("GET")
 	r.HandleFunc("/nodes/{id}", h.Get).Methods("GET")
 	r.HandleFunc("/nodes/{id}/rotate-token", h.RotateToken).Methods("POST")
+	r.HandleFunc("/nodes/{id}/reset", h.Reset).Methods("POST")
 }
 
 type rotateTokenResponse struct {
@@ -118,6 +119,28 @@ func (h *NodesHandler) RotateToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	n, token, err := h.svc.RotateToken(r.Context(), vars["id"], h.cfg.JWT.Secret, h.cfg.JWT.ExpireHours)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "node not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	cmd := buildInstallCommand(n.Platform, panelURL, token)
+	respondJSON(w, rotateTokenResponse{InstallCommand: cmd})
+}
+
+func (h *NodesHandler) Reset(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	panelURL := r.Header.Get("X-Panel-URL")
+	if panelURL == "" {
+		panelURL = "https://panel.example.com"
+	}
+
+	n, token, err := h.svc.Reset(r.Context(), vars["id"], h.cfg.JWT.Secret, h.cfg.JWT.ExpireHours)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "node not found", http.StatusNotFound)
