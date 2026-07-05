@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"math"
 	"net/http"
 	"time"
 
@@ -91,6 +92,16 @@ func (h *AgentWSHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		switch t {
 		case "register":
 			h.handleRegister(claims.NodeID, msg)
+		case "metrics":
+			ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+			if err := h.updateMetrics(ctx, claims.NodeID, msg); err != nil {
+				log.Printf("agent ws metrics update error: %v", err)
+			}
+			cancel()
+			if err := h.queries.UpdateNodeStatus(r.Context(), db.UpdateNodeStatusParams{Status: "online", ID: claims.NodeID}); err != nil {
+				log.Printf("agent ws status update error: %v", err)
+			}
+			h.broadcastNodeUpdate(claims.NodeID)
 		case "heartbeat":
 			h.queries.UpdateNodeStatus(r.Context(), db.UpdateNodeStatusParams{Status: "online", ID: claims.NodeID})
 		}
@@ -110,6 +121,68 @@ func (h *AgentWSHandler) handleRegister(nodeID string, msg map[string]interface{
 		ID:         nodeID,
 	})
 	h.broadcastNodeUpdate(nodeID)
+}
+
+func (h *AgentWSHandler) updateMetrics(ctx context.Context, nodeID string, msg map[string]interface{}) error {
+	nodeRow, err := h.queries.GetNode(ctx, nodeID)
+	if err != nil {
+		return err
+	}
+	var info map[string]interface{}
+	if nodeRow.SystemInfo.Valid && nodeRow.SystemInfo.String != "" {
+		if err := json.Unmarshal([]byte(nodeRow.SystemInfo.String), &info); err != nil {
+			log.Printf("agent ws metrics: unmarshal system_info for node %s: %v", nodeID, err)
+			info = make(map[string]interface{})
+		}
+	}
+	if info == nil {
+		info = make(map[string]interface{})
+	}
+	if v, ok := msg["cpu_percent"]; ok {
+		if f, ok := toFloat64(v); ok && !math.IsNaN(f) && !math.IsInf(f, 0) && f >= 0 && f <= 100 {
+			info["cpu_percent"] = f
+		} else {
+			info["cpu_percent"] = float64(0)
+		}
+	}
+	if v, ok := msg["memory_used"]; ok {
+		if f, ok := toFloat64(v); ok && f >= 0 {
+			info["memory_used"] = f
+		} else {
+			info["memory_used"] = float64(0)
+		}
+	}
+	if v, ok := msg["memory_free"]; ok {
+		if f, ok := toFloat64(v); ok && f >= 0 {
+			info["memory_free"] = f
+		} else {
+			info["memory_free"] = float64(0)
+		}
+	}
+	data, err := json.Marshal(info)
+	if err != nil {
+		return err
+	}
+	return h.queries.UpdateNodeSystemInfo(ctx, db.UpdateNodeSystemInfoParams{
+		SystemInfo: sql.NullString{String: string(data), Valid: true},
+		ID:         nodeID,
+	})
+}
+
+func toFloat64(v interface{}) (float64, bool) {
+	switch n := v.(type) {
+	case float64:
+		return n, true
+	case float32:
+		return float64(n), true
+	case int:
+		return float64(n), true
+	case int64:
+		return float64(n), true
+	case int32:
+		return float64(n), true
+	}
+	return 0, false
 }
 
 func (h *AgentWSHandler) broadcastNodeUpdate(nodeID string) {

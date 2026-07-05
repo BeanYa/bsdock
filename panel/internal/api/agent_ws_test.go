@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http/httptest"
 	"net/url"
 	"testing"
@@ -164,6 +165,93 @@ func TestAgentWebSocketTokenAlreadyUsed(t *testing.T) {
 	}
 	if resp.StatusCode != 401 {
 		t.Fatalf("expected 401, got %d", resp.StatusCode)
+	}
+}
+
+func TestAgentWS_MetricsUpdatesSystemInfo(t *testing.T) {
+	sqlDB, _ := db.Open(":memory:")
+	defer sqlDB.Close()
+	queries := db.New(sqlDB)
+	cfg := &config.Config{JWT: config.JWT{Secret: "secret", ExpireHours: 1}}
+	svc := node.NewService(queries)
+	hub := panelws.NewHub()
+	go hub.Run()
+
+	h := NewAgentWSHandler(svc, queries, cfg, hub)
+	r := mux.NewRouter()
+	h.Register(r)
+
+	ctx := t.Context()
+	created, token, err := svc.Create(ctx, "srv-01", "linux", cfg.JWT.Secret, cfg.JWT.ExpireHours)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	server := httptest.NewServer(r)
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	u.Scheme = "ws"
+	u.Path = "/api/v1/agent/ws"
+	u.RawQuery = "token=" + token
+
+	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ws.Close()
+
+	// Drain the initial connection broadcast.
+	frontendCh := make(chan []byte, 2)
+	hub.Subscribe(created.ID, frontendCh)
+	select {
+	case <-frontendCh:
+	case <-time.After(2 * time.Second):
+		t.Fatal("timeout waiting for initial node_update broadcast")
+	}
+
+	metrics := map[string]interface{}{
+		"type":        "metrics",
+		"cpu_percent": 12.5,
+		"memory_used": int64(100),
+		"memory_free": int64(200),
+	}
+	if err := ws.WriteJSON(metrics); err != nil {
+		t.Fatal(err)
+	}
+
+	select {
+	case msg := <-frontendCh:
+		var broadcast map[string]interface{}
+		if err := json.Unmarshal(msg, &broadcast); err != nil {
+			t.Fatal(err)
+		}
+		if broadcast["type"] != "node_update" {
+			t.Fatalf("expected node_update broadcast, got %v", broadcast["type"])
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("timeout waiting for metrics node_update broadcast")
+	}
+
+	n, err := svc.Get(created.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n.SystemInfo == nil {
+		t.Fatal("expected system_info after metrics")
+	}
+	var info map[string]interface{}
+	if err := json.Unmarshal(n.SystemInfo, &info); err != nil {
+		t.Fatal(err)
+	}
+	if info["cpu_percent"] != 12.5 {
+		t.Fatalf("expected cpu_percent 12.5, got %v", info["cpu_percent"])
+	}
+	if info["memory_used"] != float64(100) {
+		t.Fatalf("expected memory_used 100, got %v", info["memory_used"])
+	}
+	if info["memory_free"] != float64(200) {
+		t.Fatalf("expected memory_free 200, got %v", info["memory_free"])
 	}
 }
 

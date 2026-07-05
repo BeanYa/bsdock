@@ -15,9 +15,10 @@ import (
 	"github.com/bsdock/panel/internal/config"
 	"github.com/bsdock/panel/internal/db"
 	"github.com/bsdock/panel/internal/node"
+	panelws "github.com/bsdock/panel/internal/websocket"
 )
 
-func setupAgentHandler(t *testing.T) (*sql.DB, *db.Queries, *config.Config, *node.Service, *mux.Router) {
+func setupAgentHandler(t *testing.T) (*sql.DB, *db.Queries, *config.Config, *node.Service, *mux.Router, *panelws.Hub) {
 	t.Helper()
 	sqlDB, err := db.Open(":memory:")
 	if err != nil {
@@ -27,14 +28,16 @@ func setupAgentHandler(t *testing.T) (*sql.DB, *db.Queries, *config.Config, *nod
 	queries := db.New(sqlDB)
 	cfg := &config.Config{JWT: config.JWT{Secret: "secret", ExpireHours: 1}}
 	svc := node.NewService(queries)
-	h := NewAgentHTTPHandler(sqlDB, queries, cfg)
+	hub := panelws.NewHub()
+	go hub.Run()
+	h := NewAgentHTTPHandler(sqlDB, queries, cfg, svc, hub)
 	r := mux.NewRouter()
 	h.Register(r)
-	return sqlDB, queries, cfg, svc, r
+	return sqlDB, queries, cfg, svc, r, hub
 }
 
 func TestAgentHTTPReport(t *testing.T) {
-	_, _, _, svc, r := setupAgentHandler(t)
+	_, _, _, svc, r, _ := setupAgentHandler(t)
 
 	ctx := t.Context()
 	created, token, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
@@ -67,7 +70,7 @@ func TestAgentHTTPReport(t *testing.T) {
 }
 
 func TestAgentPull(t *testing.T) {
-	_, _, _, svc, r := setupAgentHandler(t)
+	_, _, _, svc, r, _ := setupAgentHandler(t)
 
 	ctx := t.Context()
 	created, token, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
@@ -100,7 +103,7 @@ func TestAgentPull(t *testing.T) {
 }
 
 func TestAgentReportInvalidToken(t *testing.T) {
-	_, _, _, _, r := setupAgentHandler(t)
+	_, _, _, _, r, _ := setupAgentHandler(t)
 
 	payload := map[string]interface{}{
 		"token":    "not-a-valid-token",
@@ -119,7 +122,7 @@ func TestAgentReportInvalidToken(t *testing.T) {
 }
 
 func TestAgentReportMissingToken(t *testing.T) {
-	_, _, _, _, r := setupAgentHandler(t)
+	_, _, _, _, r, _ := setupAgentHandler(t)
 
 	payload := map[string]interface{}{
 		"hostname": "srv-01",
@@ -137,7 +140,7 @@ func TestAgentReportMissingToken(t *testing.T) {
 }
 
 func TestAgentReportMalformedJSON(t *testing.T) {
-	_, _, _, _, r := setupAgentHandler(t)
+	_, _, _, _, r, _ := setupAgentHandler(t)
 
 	req := httptest.NewRequest("POST", "/api/v1/agent/report", strings.NewReader("not json"))
 	rec := httptest.NewRecorder()
@@ -149,7 +152,7 @@ func TestAgentReportMalformedJSON(t *testing.T) {
 }
 
 func TestAgentReportTokenReuse(t *testing.T) {
-	_, _, _, svc, r := setupAgentHandler(t)
+	_, _, _, svc, r, _ := setupAgentHandler(t)
 
 	ctx := t.Context()
 	created, token, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
@@ -188,7 +191,7 @@ func TestAgentReportTokenReuse(t *testing.T) {
 }
 
 func TestAgentReportDoesNotStoreToken(t *testing.T) {
-	_, _, _, svc, r := setupAgentHandler(t)
+	_, _, _, svc, r, _ := setupAgentHandler(t)
 
 	ctx := t.Context()
 	created, token, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
@@ -232,7 +235,7 @@ func TestAgentReportDoesNotStoreToken(t *testing.T) {
 }
 
 func TestAgentReportNextReportSeconds(t *testing.T) {
-	_, _, _, svc, r := setupAgentHandler(t)
+	_, _, _, svc, r, _ := setupAgentHandler(t)
 
 	ctx := t.Context()
 	_, token, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
@@ -285,7 +288,7 @@ func TestAgentReportNextReportSeconds(t *testing.T) {
 }
 
 func TestAgentHeartbeatDoesNotOverwriteSystemInfo(t *testing.T) {
-	_, _, _, svc, r := setupAgentHandler(t)
+	_, _, _, svc, r, _ := setupAgentHandler(t)
 
 	ctx := t.Context()
 	created, token, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
@@ -340,8 +343,74 @@ func TestAgentHeartbeatDoesNotOverwriteSystemInfo(t *testing.T) {
 	}
 }
 
+func TestAgentHTTP_ReportWithMetrics(t *testing.T) {
+	_, _, _, svc, r, hub := setupAgentHandler(t)
+
+	ctx := t.Context()
+	created, token, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	frontendCh := make(chan []byte, 1)
+	hub.Subscribe(created.ID, frontendCh)
+
+	payload := map[string]interface{}{
+		"token":       token,
+		"hostname":    "srv-01",
+		"os":          "linux",
+		"arch":        "amd64",
+		"cpu_percent": 33.3,
+		"memory_used": 100,
+		"memory_free": 200,
+	}
+	body, _ := json.Marshal(payload)
+	req := httptest.NewRequest("POST", "/api/v1/agent/report", bytes.NewReader(body))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	select {
+	case msg := <-frontendCh:
+		var broadcast map[string]interface{}
+		if err := json.Unmarshal(msg, &broadcast); err != nil {
+			t.Fatal(err)
+		}
+		if broadcast["type"] != "node_update" {
+			t.Fatalf("expected node_update broadcast, got %v", broadcast["type"])
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("timeout waiting for node_update broadcast")
+	}
+
+	n, err := svc.Get(created.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n.SystemInfo == nil {
+		t.Fatal("expected system_info to be stored")
+	}
+
+	var info map[string]interface{}
+	if err := json.Unmarshal(n.SystemInfo, &info); err != nil {
+		t.Fatal(err)
+	}
+	if info["cpu_percent"] != 33.3 {
+		t.Fatalf("expected cpu_percent 33.3, got %v", info["cpu_percent"])
+	}
+	if info["memory_used"] != float64(100) {
+		t.Fatalf("expected memory_used 100, got %v", info["memory_used"])
+	}
+	if info["memory_free"] != float64(200) {
+		t.Fatalf("expected memory_free 200, got %v", info["memory_free"])
+	}
+}
+
 func TestAgentReportInvalidTokenHash(t *testing.T) {
-	_, queries, _, svc, r := setupAgentHandler(t)
+	_, queries, _, svc, r, _ := setupAgentHandler(t)
 
 	ctx := t.Context()
 	created, originalToken, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)

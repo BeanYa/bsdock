@@ -90,7 +90,7 @@ func main() {
 	// Agent endpoints (public)
 	agentWS := api.NewAgentWSHandler(nodeSvc, queries, cfg, hub)
 	agentWS.Register(r)
-	agentHTTP := api.NewAgentHTTPHandler(sqlDB, queries, cfg)
+	agentHTTP := api.NewAgentHTTPHandler(sqlDB, queries, cfg, nodeSvc, hub)
 	agentHTTP.Register(r)
 
 	// Frontend WebSocket for real-time updates (public path; token validated in handler)
