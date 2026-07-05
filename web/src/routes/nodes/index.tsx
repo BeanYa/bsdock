@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CopyButton } from '@/components/copy-button'
 import { EmptyState } from '@/components/empty-state'
 import { InstallCommandDisplay } from '@/components/install-command-card'
 import { PageHeader } from '@/components/page-header'
@@ -54,6 +53,7 @@ function NodesPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogLoading, setDialogLoading] = useState(false)
   const [dialogNodeId, setDialogNodeId] = useState<string | null>(null)
+  const [createdNodeId, setCreatedNodeId] = useState<string | null>(null)
 
   const filteredNodes = useMemo(() => {
     return (nodes as Node[]).filter((node) => {
@@ -69,6 +69,7 @@ function NodesPage() {
     try {
       const data = await api.createNode(name, panelURL, platform)
       setInstallCommand(data.install_command)
+      setCreatedNodeId(data.id)
       setName('')
       toast({ title: '节点创建成功' })
       reload()
@@ -88,6 +89,7 @@ function NodesPage() {
     if (!value) {
       setInstallCommand('')
       setName('')
+      setCreatedNodeId(null)
     }
   }
 
@@ -187,13 +189,26 @@ function NodesPage() {
                 </Button>
               </form>
             ) : (
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">Run this command on the target server:</p>
-                <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-md bg-muted p-3 text-xs">
-                  <code>{installCommand}</code>
-                </pre>
-                <CopyButton text={installCommand} className="w-full" />
-              </div>
+              <InstallCommandDisplay
+                installCommand={installCommand}
+                loading={submitting}
+                onGenerate={async () => {
+                  if (!createdNodeId) return
+                  setSubmitting(true)
+                  try {
+                    const data = await api.rotateToken(createdNodeId)
+                    setInstallCommand(data.install_command)
+                  } catch (err) {
+                    toast({
+                      title: '生成安装命令失败',
+                      description: err instanceof Error ? err.message : '无法轮换 Token',
+                      variant: 'destructive',
+                    })
+                  } finally {
+                    setSubmitting(false)
+                  }
+                }}
+              />
             )}
           </DialogContent>
         </Dialog>
@@ -228,7 +243,7 @@ function NodesPage() {
           Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="relative flex flex-col overflow-hidden rounded-xl border border-[#2A3546] bg-[#1F2833] p-4"
+              className="relative flex flex-col overflow-hidden rounded-lg border border-[#2A3546] bg-[#1F2833] p-4"
             >
               <Skeleton className="h-5 w-3/4" />
               <Skeleton className="mt-3 h-4 w-16" />

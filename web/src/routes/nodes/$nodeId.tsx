@@ -5,6 +5,7 @@ import { api } from '@/lib/api'
 import { useNode } from '@/hooks/useNode'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { getStatusColorClasses } from '@/lib/status'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -101,7 +102,7 @@ function NodeDetailPage() {
         <div
           className={cn(
             'absolute left-0 top-0 h-full w-2',
-            node.status === 'online' ? 'bg-[#39FF14]' : node.status === 'offline' ? 'bg-[#FFC107]' : 'bg-[#FF4D4D]'
+            getStatusColorClasses(node.status).bg
           )}
           aria-hidden="true"
         />
@@ -122,11 +123,11 @@ function NodeDetailPage() {
       <section>
         <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-[#8892A0]">Hardware</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <InfoCard title="Hostname" value={String(info.hostname || '-')} />
-          <InfoCard title="OS / Arch" value={`${info.os || '-'} / ${info.arch || '-'}`} />
-          <InfoCard title="Kernel" value={String(info.kernel || '-')} />
-          <InfoCard title="CPU" value={`${info.cpu_model || '-'} (${info.cpu_cores || '-'} cores)`} />
-          <InfoCard title="Platform" value={String(node.platform || '-')} />
+          <InfoCard title="Hostname" value={info.hostname ? String(info.hostname) : undefined} />
+          <InfoCard title="OS / Arch" value={Boolean(info.os) || Boolean(info.arch) ? `${info.os ? String(info.os) : '—'} / ${info.arch ? String(info.arch) : '—'}` : undefined} />
+          <InfoCard title="Kernel" value={info.kernel ? String(info.kernel) : undefined} />
+          <InfoCard title="CPU" value={Boolean(info.cpu_model) || Boolean(info.cpu_cores) ? `${info.cpu_model ? String(info.cpu_model) : '—'} (${info.cpu_cores ? String(info.cpu_cores) : '—'} cores)` : undefined} />
+          <InfoCard title="Platform" value={node.platform} />
         </div>
       </section>
 
@@ -136,7 +137,7 @@ function NodeDetailPage() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <ResourceCard title="Memory" used={memoryUsed} total={memoryTotal} />
           <ResourceCard title="Disk" used={diskUsed} total={diskTotal} />
-          <InfoCard title="CPU Cores" value={String(info.cpu_cores || '-')} />
+          <InfoCard title="CPU Cores" value={info.cpu_cores ? String(info.cpu_cores) : undefined} />
         </div>
       </section>
 
@@ -144,8 +145,8 @@ function NodeDetailPage() {
       <section>
         <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-[#8892A0]">Network</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <InfoCard title="Uptime" value={info.uptime ? `${Number(info.uptime).toLocaleString()}s` : '-'} />
-          <InfoCard title="IPs" value={Array.isArray(info.ips) ? info.ips.join(', ') : '-'} />
+          <InfoCard title="Uptime" value={info.uptime ? `${Number(info.uptime).toLocaleString()}s` : undefined} />
+          <InfoCard title="IPs" value={Array.isArray(info.ips) ? info.ips.join(', ') : undefined} />
         </div>
       </section>
 

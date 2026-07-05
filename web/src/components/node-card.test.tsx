@@ -55,8 +55,8 @@ describe('NodeCard', () => {
   it('renders name, status, platform, ip and resource snapshot', () => {
     renderCard(baseNode)
     expect(screen.getByText('prod-web-01')).toBeInTheDocument()
-    expect(screen.getByText('ONLINE')).toBeInTheDocument()
-    expect(screen.getByText('LINUX')).toBeInTheDocument()
+    expect(screen.getByText('online')).toBeInTheDocument()
+    expect(screen.getByText('linux')).toBeInTheDocument()
     expect(screen.getByText('10.0.0.4')).toBeInTheDocument()
     expect(screen.getByText(/CPU 12%.*MEM 25%/)).toBeInTheDocument()
   })
@@ -86,7 +86,7 @@ describe('NodeCard', () => {
   it('renders pending status', () => {
     const pendingNode: Node = { ...baseNode, status: 'pending' }
     renderCard(pendingNode)
-    expect(screen.getByText('PENDING')).toBeInTheDocument()
+    expect(screen.getByText('pending')).toBeInTheDocument()
   })
 
   it('emits rotate token action', async () => {

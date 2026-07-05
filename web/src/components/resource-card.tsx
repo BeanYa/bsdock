@@ -5,27 +5,27 @@ interface ResourceCardProps {
   title: string
   used?: number
   total?: number
-  unit?: string
 }
 
 function formatBytes(bytes?: number): string {
-  if (!bytes || bytes === 0) return '—'
+  if (bytes === undefined || Number.isNaN(bytes)) return '—'
+  if (bytes === 0) return '0.00 B'
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  const i = Math.min(sizes.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)))
   return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`
 }
 
-export function ResourceCard({ title, used, total, unit }: ResourceCardProps) {
-  const ratio = used && total && total > 0 ? used / total : null
+export function ResourceCard({ title, used, total }: ResourceCardProps) {
+  const ratio = used != null && total != null && total > 0 ? used / total : null
   let barColor = 'bg-[#39FF14]'
-  if (ratio && ratio > 0.9) barColor = 'bg-[#FF4D4D]'
-  else if (ratio && ratio > 0.7) barColor = 'bg-[#FFC107]'
+  if (ratio !== null && ratio > 0.9) barColor = 'bg-[#FF4D4D]'
+  else if (ratio !== null && ratio > 0.7) barColor = 'bg-[#FFC107]'
 
   const valueText =
-    used && total
+    used != null && total != null
       ? `${formatBytes(used)} / ${formatBytes(total)}`
-      : used
-      ? `${formatBytes(used)}${unit ? ` ${unit}` : ''}`
+      : used != null
+      ? formatBytes(used)
       : '—'
 
   return (

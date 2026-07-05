@@ -13,7 +13,7 @@ export function StatusBadge({ status }: { status: string }) {
 
   return (
     <Badge variant="outline" className={cn('border font-mono text-xs uppercase tracking-wider', className)}>
-      {status.toUpperCase()}
+      {status}
     </Badge>
   )
 }

@@ -18,9 +18,14 @@ describe('ResourceCard', () => {
     expect(screen.getByText('—')).toBeInTheDocument()
   })
 
-  it('shows used value with unit when total is missing', () => {
-    render(<ResourceCard title="CPU" used={45} unit="%" />)
-    expect(screen.getByText('45.00 B %')).toBeInTheDocument()
+  it('shows zero used value formatted as bytes', () => {
+    render(<ResourceCard title="Memory" used={0} total={16 * 1024 * 1024 * 1024} />)
+    expect(screen.getByText('0.00 B / 16.00 GB')).toBeInTheDocument()
+  })
+
+  it('shows used value when total is missing', () => {
+    render(<ResourceCard title="Disk" used={1024} />)
+    expect(screen.getByText('1.00 KB')).toBeInTheDocument()
   })
 
   it('renders green bar for low usage', () => {

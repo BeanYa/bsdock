@@ -9,9 +9,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/status-badge'
+import { getStatusColorClasses, type NodeStatus } from '@/lib/status'
 import { cn } from '@/lib/utils'
 
-export type NodeStatus = 'online' | 'offline' | 'pending'
+export type { NodeStatus }
 
 export interface Node {
   id: string
@@ -30,18 +31,12 @@ interface NodeCardProps {
   onRotateToken: (id: string) => void
 }
 
-const statusColorClasses: Record<NodeStatus, string> = {
-  online: 'bg-[#39FF14] text-[#39FF14]',
-  offline: 'bg-[#FFC107] text-[#FFC107]',
-  pending: 'bg-[#FF4D4D] text-[#FF4D4D]',
-}
-
 function formatRelativeTime(value?: string): string {
   if (!value) return '—'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '—'
   const now = new Date()
-  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+  const seconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000))
   if (seconds < 60) return 'just now'
   const minutes = Math.floor(seconds / 60)
   if (minutes < 60) return `${minutes}m ago`
@@ -83,7 +78,8 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
       <div
         className={cn(
           'absolute left-0 top-0 h-full w-1 group-hover:motion-safe:animate-status-pulse',
-          statusColorClasses[node.status]
+          getStatusColorClasses(node.status).bg,
+          getStatusColorClasses(node.status).text
         )}
         aria-hidden="true"
       />
@@ -132,7 +128,7 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
 
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 pl-3 text-xs text-[#8892A0]">
         <span className="rounded border border-[#2A3546] bg-[#0B0C10] px-1.5 py-0.5 font-mono uppercase">
-          {node.platform?.toUpperCase() || '—'}
+          {node.platform || '—'}
         </span>
         <span className="font-mono">{getPrimaryIP(node.system_info)}</span>
         {snapshot && <span className="ml-auto font-mono text-[#C5C6C7]">{snapshot}</span>}
