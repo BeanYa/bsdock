@@ -66,7 +66,10 @@ func (c *Client) buildPayload(info *collector.SystemInfo) map[string]interface{}
 		"kernel":       info.Kernel,
 		"cpu_model":    info.CPUModel,
 		"cpu_cores":    info.CPUCores,
+		"cpu_percent":  info.CPUPercent,
 		"memory_total": info.MemoryTotal,
+		"memory_used":  info.MemoryUsed,
+		"memory_free":  info.MemoryFree,
 		"disk_total":   info.DiskTotal,
 		"disk_free":    info.DiskFree,
 		"ips":          info.IPs,
@@ -87,7 +90,10 @@ func (c *Client) buildReportPayload(info *collector.SystemInfo) map[string]inter
 		"kernel":       info.Kernel,
 		"cpu_model":    info.CPUModel,
 		"cpu_cores":    info.CPUCores,
+		"cpu_percent":  info.CPUPercent,
 		"memory_total": info.MemoryTotal,
+		"memory_used":  info.MemoryUsed,
+		"memory_free":  info.MemoryFree,
 		"disk_total":   info.DiskTotal,
 		"disk_free":    info.DiskFree,
 		"ips":          info.IPs,
@@ -97,9 +103,12 @@ func (c *Client) buildReportPayload(info *collector.SystemInfo) map[string]inter
 
 func (c *Client) buildHeartbeat() map[string]interface{} {
 	return map[string]interface{}{
-		"type":      "heartbeat",
-		"timestamp": time.Now().UTC().Format(time.RFC3339),
-		"token":     c.cfg.Token,
+		"type":        "metrics",
+		"timestamp":   time.Now().UTC().Format(time.RFC3339),
+		"token":       c.cfg.Token,
+		"cpu_percent": 0.0,
+		"memory_used": 0,
+		"memory_free": 0,
 	}
 }
 

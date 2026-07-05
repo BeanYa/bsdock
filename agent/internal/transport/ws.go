@@ -49,10 +49,10 @@ func (c *Client) runWebSocket(ctx context.Context, info *collector.SystemInfo) e
 			return ctx.Err()
 		case <-ticker.C:
 			if err := ws.WriteJSON(c.buildHeartbeat()); err != nil {
-				log.Printf("agent websocket heartbeat error: %v", err)
+				log.Printf("agent websocket metrics error: %v", err)
 				return err
 			}
-			log.Printf("agent heartbeat sent via websocket")
+			log.Printf("agent metrics sent via websocket")
 		}
 	}
 }
