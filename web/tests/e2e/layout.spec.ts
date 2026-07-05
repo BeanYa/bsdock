@@ -129,7 +129,8 @@ test.describe('responsive layout', () => {
 
     await expect(page.locator('button:has-text("New Node")')).toBeVisible()
     await expect(page.locator('input[placeholder="Search nodes..."]')).toBeVisible()
-    await expect(page.locator('table tbody tr').first()).toBeVisible()
+    await expect(page.getByTestId('node-card').first()).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'web-server-01' })).toBeVisible()
 
     const emptyButtons = page.locator('button:empty:not([aria-label])')
     const count = await emptyButtons.count()
@@ -140,7 +141,8 @@ test.describe('responsive layout', () => {
     await page.setViewportSize({ width: 1280, height: 800 })
     await login(page)
 
-    await page.locator('table tbody tr').first().locator('button:has-text("View")').click()
+    await page.getByTestId('node-card').first().getByRole('button', { name: 'Actions' }).click()
+    await page.getByRole('menuitem', { name: 'View Details' }).click()
     await page.waitForURL(/\/nodes\/.+/)
 
     await expect(page.getByRole('heading', { name: 'web-server-01' })).toBeVisible()

@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { MoreHorizontal, Plus, Search } from 'lucide-react'
-import { api } from '@/lib/api'
+import { api, getDefaultPanelURL } from '@/lib/api'
 import { useNodes } from '@/hooks/useNodes'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CopyButton } from '@/components/copy-button'
 import { EmptyState } from '@/components/empty-state'
@@ -34,14 +34,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 
 export const Route = createFileRoute('/nodes/')({
   component: NodesPage,
@@ -68,11 +60,7 @@ function NodesPage() {
   const { nodes, loading, reload } = useNodes()
   const { toast } = useToast()
   const [name, setName] = useState('')
-  const defaultPanelURL =
-    window.location.origin === 'http://localhost:5173'
-      ? 'http://localhost:8080'
-      : window.location.origin
-  const [panelURL, setPanelURL] = useState(defaultPanelURL)
+  const [panelURL, setPanelURL] = useState(getDefaultPanelURL())
   const [platform, setPlatform] = useState('linux')
   const [installCommand, setInstallCommand] = useState('')
   const [open, setOpen] = useState(false)
@@ -230,81 +218,66 @@ function NodesPage() {
         </Select>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="w-full overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="w-[120px]">Status</TableHead>
-                  <TableHead className="hidden md:table-cell">Last Seen</TableHead>
-                  <TableHead className="hidden lg:table-cell">Created</TableHead>
-                  <TableHead className="w-[80px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                      <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-32" /></TableCell>
-                      <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-32" /></TableCell>
-                      <TableCell><Skeleton className="h-8 w-16" /></TableCell>
-                    </TableRow>
-                  ))
-                ) : filteredNodes.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="border-0 p-0">
-                      <EmptyState
-                        title="No nodes found"
-                        description={nodes.length === 0 ? 'Get started by creating your first node.' : 'Try adjusting your search or filter.'}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredNodes.map((node) => (
-                    <TableRow key={node.id}>
-                      <TableCell className="font-medium">{node.name}</TableCell>
-                      <TableCell><StatusBadge status={node.status} /></TableCell>
-                      <TableCell className="hidden md:table-cell text-muted-foreground">
-                        {node.last_seen_at ? new Date(node.last_seen_at).toLocaleString() : '-'}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-muted-foreground">
-                        {new Date(node.created_at).toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleShowInstallCommand(node.id)}>
-                              Install Command
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleShowInstallCommand(node.id)}>
-                              Rotate Token
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link to="/nodes/$nodeId" params={{ nodeId: node.id }}>
-                                View Details
-                              </Link>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {loading ? (
+          Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-5 w-3/4" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-16" />
+              </CardContent>
+            </Card>
+          ))
+        ) : filteredNodes.length === 0 ? (
+          <div className="col-span-full">
+            <EmptyState
+              title="No nodes found"
+              description={nodes.length === 0 ? 'Get started by creating your first node.' : 'Try adjusting your search or filter.'}
+            />
           </div>
-        </CardContent>
-      </Card>
+        ) : (
+          filteredNodes.map((node) => (
+            <Card key={node.id} data-testid="node-card" className="flex flex-col">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle
+                    className="truncate text-base font-medium"
+                    title={node.name}
+                  >
+                    {node.name}
+                  </CardTitle>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="-mr-2 -mt-2 shrink-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Actions</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleShowInstallCommand(node.id)}>
+                        Install Command
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShowInstallCommand(node.id)}>
+                        Rotate Token
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/nodes/$nodeId" params={{ nodeId: node.id }}>
+                          View Details
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 pt-0">
+                <StatusBadge status={node.status} />
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
 
       <Dialog open={dialogOpen} onOpenChange={(value) => {
         setDialogOpen(value)
