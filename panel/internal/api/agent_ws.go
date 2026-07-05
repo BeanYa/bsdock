@@ -141,22 +141,16 @@ func (h *AgentWSHandler) updateMetrics(ctx context.Context, nodeID string, msg m
 	if v, ok := msg["cpu_percent"]; ok {
 		if f, ok := toFloat64(v); ok && !math.IsNaN(f) && !math.IsInf(f, 0) && f >= 0 && f <= 100 {
 			info["cpu_percent"] = f
-		} else {
-			info["cpu_percent"] = float64(0)
 		}
 	}
 	if v, ok := msg["memory_used"]; ok {
 		if f, ok := toFloat64(v); ok && f >= 0 {
 			info["memory_used"] = f
-		} else {
-			info["memory_used"] = float64(0)
 		}
 	}
 	if v, ok := msg["memory_free"]; ok {
 		if f, ok := toFloat64(v); ok && f >= 0 {
 			info["memory_free"] = f
-		} else {
-			info["memory_free"] = float64(0)
 		}
 	}
 	data, err := json.Marshal(info)

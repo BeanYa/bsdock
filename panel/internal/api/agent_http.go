@@ -188,7 +188,9 @@ func (h *AgentHTTPHandler) handle(w http.ResponseWriter, r *http.Request, isPoll
 	}
 
 	updated, err := h.svc.Get(claims.NodeID)
-	if err == nil {
+	if err != nil {
+		log.Printf("agent report: get node %s for broadcast: %v", claims.NodeID, err)
+	} else {
 		h.hub.Broadcast(claims.NodeID, map[string]interface{}{
 			"type":    "node_update",
 			"payload": updated,
