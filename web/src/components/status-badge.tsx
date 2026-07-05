@@ -6,14 +6,14 @@ export function StatusBadge({ status }: { status: string }) {
 
   const className =
     normalized === 'online'
-      ? 'bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 border-emerald-500/20 dark:text-emerald-400'
+      ? 'bg-[#39FF14]/15 text-[#39FF14] hover:bg-[#39FF14]/25 border-[#39FF14]/30'
       : normalized === 'offline'
-      ? 'bg-red-500/15 text-red-600 hover:bg-red-500/25 border-red-500/20 dark:text-red-400'
-      : 'bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 border-amber-500/20 dark:text-amber-400'
+      ? 'bg-[#FFC107]/15 text-[#FFC107] hover:bg-[#FFC107]/25 border-[#FFC107]/30'
+      : 'bg-[#FF4D4D]/15 text-[#FF4D4D] hover:bg-[#FF4D4D]/25 border-[#FF4D4D]/30'
 
   return (
-    <Badge variant="outline" className={cn('border', className)}>
-      {status}
+    <Badge variant="outline" className={cn('border font-mono text-xs uppercase tracking-wider', className)}>
+      {status.toUpperCase()}
     </Badge>
   )
 }

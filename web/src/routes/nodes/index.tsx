@@ -1,18 +1,17 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { MoreHorizontal, Plus, Search } from 'lucide-react'
+import { createFileRoute } from '@tanstack/react-router'
+import { Plus, Search } from 'lucide-react'
 import { api, getDefaultPanelURL } from '@/lib/api'
 import { useNodes } from '@/hooks/useNodes'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CopyButton } from '@/components/copy-button'
 import { EmptyState } from '@/components/empty-state'
 import { InstallCommandDisplay } from '@/components/install-command-card'
 import { PageHeader } from '@/components/page-header'
-import { StatusBadge } from '@/components/status-badge'
+import { NodeCard, type Node } from '@/components/node-card'
 import { useToast } from '@/hooks/use-toast'
 import {
   Dialog,
@@ -21,12 +20,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   Select,
   SelectContent,
@@ -38,16 +31,6 @@ import {
 export const Route = createFileRoute('/nodes/')({
   component: NodesPage,
 })
-
-type Node = {
-  id: string
-  name: string
-  status: 'pending' | 'online' | 'offline'
-  platform?: string
-  system_info?: Record<string, unknown>
-  last_seen_at?: string
-  created_at: string
-}
 
 const statusOptions = [
   { value: 'all', label: 'All Status' },
@@ -243,14 +226,13 @@ function NodesPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {loading ? (
           Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-5 w-3/4" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-16" />
-              </CardContent>
-            </Card>
+            <div
+              key={i}
+              className="relative flex flex-col overflow-hidden rounded-xl border border-[#2A3546] bg-[#1F2833] p-4"
+            >
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="mt-3 h-4 w-16" />
+            </div>
           ))
         ) : filteredNodes.length === 0 ? (
           <div className="col-span-full">
@@ -261,48 +243,13 @@ function NodesPage() {
           </div>
         ) : (
           filteredNodes.map((node) => (
-            <Card key={node.id} data-testid="node-card" className="flex flex-col">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle
-                    className="truncate text-base font-medium"
-                    title={node.name}
-                  >
-                    {node.name}
-                  </CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="-mr-2 -mt-2 shrink-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Actions</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {node.status === 'online' ? (
-                        <DropdownMenuItem onClick={() => handleReset(node.id)}>
-                          Reset
-                        </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem onClick={() => handleShowInstallCommand(node.id)}>
-                          Install Command
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem onClick={() => handleShowInstallCommand(node.id)}>
-                        Rotate Token
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/nodes/$nodeId" params={{ nodeId: node.id }}>
-                          View Details
-                        </Link>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1 pt-0">
-                <StatusBadge status={node.status} />
-              </CardContent>
-            </Card>
+            <NodeCard
+              key={node.id}
+              node={node as Node}
+              onInstallCommand={handleShowInstallCommand}
+              onReset={handleReset}
+              onRotateToken={handleShowInstallCommand}
+            />
           ))
         )}
       </div>

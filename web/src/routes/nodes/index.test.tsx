@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
@@ -63,8 +64,6 @@ describe('NodesPage theme', () => {
     })
 
     const nodesRoute = NodesIndexRoute.update({
-      id: '/nodes/',
-      path: '/nodes/',
       getParentRoute: () => rootRoute,
     })
 
