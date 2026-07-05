@@ -146,6 +146,56 @@ func TestRotateTokenHandlerNotFound(t *testing.T) {
 	}
 }
 
+func TestResetHandler(t *testing.T) {
+	sqlDB, _ := db.Open(":memory:")
+	defer sqlDB.Close()
+	queries := db.New(sqlDB)
+	svc := node.NewService(queries)
+	cfg := &config.Config{JWT: config.JWT{Secret: "test-secret", ExpireHours: 1}}
+	h := NewNodesHandler(svc, cfg)
+	r := mux.NewRouter()
+	apiRouter := r.PathPrefix("/api/v1").Subrouter()
+	h.Register(apiRouter)
+
+	created, _, err := svc.Create(t.Context(), "srv-reset", "linux", cfg.JWT.Secret, cfg.JWT.ExpireHours)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := queries.MarkInstallTokenUsed(t.Context(), created.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := queries.UpdateNodeStatus(t.Context(), db.UpdateNodeStatusParams{Status: "online", ID: created.ID}); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest("POST", "/api/v1/nodes/"+created.ID+"/reset", nil)
+	req.Header.Set("X-Panel-URL", "https://panel.local")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+	var resp rotateTokenResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatal(err)
+	}
+	if resp.InstallCommand == "" {
+		t.Fatal("expected install command")
+	}
+
+	nodeRow, err := queries.GetNode(t.Context(), created.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if nodeRow.Status != "pending" {
+		t.Fatalf("expected pending, got %s", nodeRow.Status)
+	}
+	if nodeRow.TokenUsed {
+		t.Fatal("expected token_used to be false after reset")
+	}
+}
+
 func TestBuildInstallCommandWindows(t *testing.T) {
 	panelURL := "https://panel.example.com"
 	token := "test-token"

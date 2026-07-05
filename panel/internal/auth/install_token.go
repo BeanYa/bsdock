@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -13,9 +15,15 @@ type InstallClaims struct {
 }
 
 func GenerateInstallToken(secret, nodeID string, expireHours int) (string, error) {
+	idBytes := make([]byte, 8)
+	if _, err := rand.Read(idBytes); err != nil {
+		return "", err
+	}
+
 	claims := InstallClaims{
 		NodeID: nodeID,
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        hex.EncodeToString(idBytes),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(expireHours) * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
