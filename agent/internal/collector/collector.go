@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"math"
 	"net"
 	"runtime"
 
@@ -22,6 +23,9 @@ type SystemInfo struct {
 	DiskFree    int64    `json:"disk_free"`
 	IPs         []string `json:"ips"`
 	Uptime      uint64   `json:"uptime"`
+	CPUPercent  float64  `json:"cpu_percent"`
+	MemoryUsed  int64    `json:"memory_used"`
+	MemoryFree  int64    `json:"memory_free"`
 }
 
 func Collect() (*SystemInfo, error) {
@@ -45,6 +49,20 @@ func Collect() (*SystemInfo, error) {
 		return nil, err
 	}
 
+	var cpuPercent float64
+	if percents, err := cpu.Percent(0, false); err == nil && len(percents) > 0 {
+		cpuPercent = percents[0]
+	}
+	if math.IsNaN(cpuPercent) {
+		cpuPercent = 0
+	}
+	if cpuPercent < 0 {
+		cpuPercent = 0
+	}
+	if cpuPercent > 100 {
+		cpuPercent = 100
+	}
+
 	diskInfo, err := disk.Usage("/")
 	if err != nil {
 		return nil, err
@@ -64,6 +82,9 @@ func Collect() (*SystemInfo, error) {
 		DiskFree:    int64(diskInfo.Free),
 		IPs:         ips,
 		Uptime:      hostInfo.Uptime,
+		CPUPercent:  cpuPercent,
+		MemoryUsed:  int64(memInfo.Used),
+		MemoryFree:  int64(memInfo.Free),
 	}, nil
 }
 
