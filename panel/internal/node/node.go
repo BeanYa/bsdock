@@ -112,6 +112,31 @@ func (s *Service) RotateToken(ctx context.Context, id, jwtSecret string, expireH
 	return &n, token, nil
 }
 
+func (s *Service) Reset(ctx context.Context, id, jwtSecret string, expireHours int) (*Node, string, error) {
+	if _, err := s.queries.GetNode(ctx, id); err != nil {
+		return nil, "", err
+	}
+
+	token, err := auth.GenerateInstallToken(jwtSecret, id, expireHours)
+	if err != nil {
+		return nil, "", err
+	}
+
+	hashBytes := sha256.Sum256([]byte(token))
+	tokenHash := hex.EncodeToString(hashBytes[:])
+
+	row, err := s.queries.ResetNode(ctx, db.ResetNodeParams{
+		ID:        id,
+		TokenHash: tokenHash,
+	})
+	if err != nil {
+		return nil, "", err
+	}
+
+	n := fromDB(row)
+	return &n, token, nil
+}
+
 func fromDB(row db.Node) Node {
 	var sysInfo json.RawMessage
 	if row.SystemInfo.Valid && row.SystemInfo.String != "" {
