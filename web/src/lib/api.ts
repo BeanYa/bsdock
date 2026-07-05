@@ -3,9 +3,22 @@ import { getToken, clearToken } from '@/lib/auth'
 const API_BASE = '/api/v1'
 
 export function getDefaultPanelURL(): string {
-  return window.location.origin === 'http://localhost:5173'
-    ? 'http://localhost:8080'
-    : window.location.origin
+  // During local development the Vite dev server may bind to any port (5173 by
+  // default, or 5174/5175/etc. if 5173 is already in use). The panel backend is
+  // always expected on localhost:8080 in that setup, so redirect any localhost
+  // origin that is not the backend port.
+  try {
+    const url = new URL(window.location.origin)
+    if (
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
+      url.port !== '8080'
+    ) {
+      return 'http://localhost:8080'
+    }
+  } catch {
+    // Fall through to returning the raw origin if parsing fails.
+  }
+  return window.location.origin
 }
 
 async function request(path: string, options: RequestInit = {}) {
@@ -49,6 +62,11 @@ export const api = {
     }),
   rotateToken: (id: string) =>
     request(`/nodes/${id}/rotate-token`, {
+      method: 'POST',
+      headers: { 'X-Panel-URL': getDefaultPanelURL() },
+    }),
+  resetNode: (id: string) =>
+    request(`/nodes/${id}/reset`, {
       method: 'POST',
       headers: { 'X-Panel-URL': getDefaultPanelURL() },
     }),
