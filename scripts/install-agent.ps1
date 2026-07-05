@@ -47,6 +47,27 @@ if (-not (Test-Path $installDir)) {
 Write-Host "Downloading agent from $binUrl ..."
 Invoke-WebRequest -Uri $binUrl -OutFile $binPath -UseBasicParsing
 
+# Validate that the downloaded file is a Windows executable (PE "MZ" header).
+# If the Panel URL points at the Vite dev server instead of the panel backend,
+# the server may return an HTML 404/fallback page, which Start-Process cannot
+# execute and would report as "文件或目录损坏且无法读取".
+$minimumSize = 4096
+$fileInfo = Get-Item $binPath
+if ($fileInfo.Length -lt $minimumSize) {
+    throw "Downloaded file is too small ($($fileInfo.Length) bytes). Verify that -PanelURL points to the panel backend (e.g. http://localhost:8080), not the frontend dev server."
+}
+
+$stream = [System.IO.File]::OpenRead($binPath)
+$header = New-Object byte[] 2
+try {
+    if ($stream.Read($header, 0, 2) -ne 2 -or
+        $header[0] -ne 0x4D -or $header[1] -ne 0x5A) {
+        throw "Downloaded file does not appear to be a valid Windows executable (missing MZ header). Verify that -PanelURL points to the panel backend (e.g. http://localhost:8080), not the frontend dev server."
+    }
+} finally {
+    $stream.Dispose()
+}
+
 $argsList = @("--panel", $PanelURL, "--token", $Token, "--mode", $Mode)
 if ($Insecure) {
     $argsList += "--insecure"

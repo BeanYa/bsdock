@@ -16,9 +16,33 @@ describe('api', () => {
   })
 
   describe('getDefaultPanelURL', () => {
-    it('returns localhost backend during vite dev', () => {
+    it('returns localhost backend during vite dev on default port', () => {
       Object.defineProperty(window, 'location', {
         value: { origin: 'http://localhost:5173' },
+        writable: true,
+      })
+      expect(getDefaultPanelURL()).toBe('http://localhost:8080')
+    })
+
+    it('returns localhost backend when vite uses an alternate port', () => {
+      Object.defineProperty(window, 'location', {
+        value: { origin: 'http://localhost:5175' },
+        writable: true,
+      })
+      expect(getDefaultPanelURL()).toBe('http://localhost:8080')
+    })
+
+    it('returns localhost backend for 127.0.0.1 dev origins', () => {
+      Object.defineProperty(window, 'location', {
+        value: { origin: 'http://127.0.0.1:5173' },
+        writable: true,
+      })
+      expect(getDefaultPanelURL()).toBe('http://localhost:8080')
+    })
+
+    it('returns window.location.origin when already on the backend port', () => {
+      Object.defineProperty(window, 'location', {
+        value: { origin: 'http://localhost:8080' },
         writable: true,
       })
       expect(getDefaultPanelURL()).toBe('http://localhost:8080')

@@ -53,6 +53,23 @@ fi
 mkdir -p "$INSTALL_DIR"
 echo "Downloading agent from $BIN_URL ..."
 curl -fsSL "$BIN_URL" -o "${INSTALL_DIR}/bsdock-agent"
+
+# Validate that the downloaded file is a Linux ELF executable. If the panel URL
+# points at the frontend dev server instead of the panel backend, the server may
+# return an HTML fallback page that cannot be executed.
+if [[ ! -f "${INSTALL_DIR}/bsdock-agent" ]]; then
+  echo "Agent binary was not downloaded." >&2
+  exit 1
+fi
+if [[ $(stat -c%s "${INSTALL_DIR}/bsdock-agent" 2>/dev/null || stat -f%z "${INSTALL_DIR}/bsdock-agent" 2>/dev/null || echo 0) -lt 4096 ]]; then
+  echo "Downloaded agent binary is too small. Verify that --panel points to the panel backend (e.g. http://localhost:8080), not the frontend dev server." >&2
+  exit 1
+fi
+if ! head -c 4 "${INSTALL_DIR}/bsdock-agent" | grep -q $'\x7fELF'; then
+  echo "Downloaded file does not appear to be a valid Linux executable (missing ELF header). Verify that --panel points to the panel backend (e.g. http://localhost:8080), not the frontend dev server." >&2
+  exit 1
+fi
+
 chmod +x "${INSTALL_DIR}/bsdock-agent"
 
 cat > "$SERVICE_FILE" <<EOF
