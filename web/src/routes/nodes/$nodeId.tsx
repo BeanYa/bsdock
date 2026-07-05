@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+
 import { InstallCommandCard } from '@/components/install-command-card'
 import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
@@ -51,14 +51,17 @@ function NodeDetailPage() {
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
+            <div
+              key={i}
+              className="rounded-lg border bg-card text-card-foreground shadow-sm"
+            >
+              <div className="flex flex-col space-y-1.5 p-6 pb-2">
                 <Skeleton className="h-4 w-24" />
-              </CardHeader>
-              <CardContent>
+              </div>
+              <div className="p-6 pt-0">
                 <Skeleton className="h-6 w-full" />
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       </div>
