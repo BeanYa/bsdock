@@ -4,12 +4,15 @@ import { ArrowLeft } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useNode } from '@/hooks/useNode'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { InstallCommandCard } from '@/components/install-command-card'
 import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
+import { InfoCard } from '@/components/info-card'
+import { ResourceCard } from '@/components/resource-card'
 
 export const Route = createFileRoute('/nodes/$nodeId')({
   component: NodeDetailPage,
@@ -75,32 +78,73 @@ function NodeDetailPage() {
   }
 
   const info = node.system_info || {}
+  const memoryUsed = Number(info.memory_total) - Number(info.memory_free || 0)
+  const memoryTotal = Number(info.memory_total)
+  const diskUsed = Number(info.disk_total) - Number(info.disk_free || 0)
+  const diskTotal = Number(info.disk_total)
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={node.name}
-        description="Node details and system information"
-      >
-        <StatusBadge status={node.status} />
+      <PageHeader title={node.name} description="Node details and system information">
         <Link to="/nodes">
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" className="border-[#2A3546] bg-[#1F2833] text-[#C5C6C7] hover:bg-[#2A3546] hover:text-[#C5C6C7]">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
       </PageHeader>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <InfoCard title="Hostname" value={String(info.hostname || '-')} />
-        <InfoCard title="OS / Arch" value={`${info.os || '-'} / ${info.arch || '-'}`} />
-        <InfoCard title="Kernel" value={String(info.kernel || '-')} />
-        <InfoCard title="CPU" value={`${info.cpu_model || '-'} (${info.cpu_cores || '-'} cores)`} />
-        <InfoCard title="Memory" value={formatBytes(Number(info.memory_total))} />
-        <InfoCard title="Disk" value={`${formatBytes(Number(info.disk_total))} total / ${formatBytes(Number(info.disk_free))} free`} />
-        <InfoCard title="IPs" value={Array.isArray(info.ips) ? info.ips.join(', ') : '-'} />
-        <InfoCard title="Uptime" value={`${info.uptime ?? '-'}s`} />
-        <InfoCard title="Platform" value={String(node.platform || '-')} />
+      {/* Status banner */}
+      <div className="relative overflow-hidden rounded-lg border border-[#2A3546] bg-[#1F2833] p-4">
+        <div
+          className={cn(
+            'absolute left-0 top-0 h-full w-2',
+            node.status === 'online' ? 'bg-[#39FF14]' : node.status === 'offline' ? 'bg-[#FFC107]' : 'bg-[#FF4D4D]'
+          )}
+          aria-hidden="true"
+        />
+        <div className="pl-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <StatusBadge status={node.status} />
+            <span className="text-sm text-[#8892A0]">
+              Last seen: {node.last_seen_at ? new Date(node.last_seen_at).toLocaleString() : '—'}
+            </span>
+            <span className="text-sm text-[#8892A0]">
+              Uptime: {info.uptime ? `${Number(info.uptime).toLocaleString()}s` : '—'}
+            </span>
+          </div>
+        </div>
       </div>
+
+      {/* Hardware */}
+      <section>
+        <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-[#8892A0]">Hardware</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <InfoCard title="Hostname" value={String(info.hostname || '-')} />
+          <InfoCard title="OS / Arch" value={`${info.os || '-'} / ${info.arch || '-'}`} />
+          <InfoCard title="Kernel" value={String(info.kernel || '-')} />
+          <InfoCard title="CPU" value={`${info.cpu_model || '-'} (${info.cpu_cores || '-'} cores)`} />
+          <InfoCard title="Platform" value={String(node.platform || '-')} />
+        </div>
+      </section>
+
+      {/* Resources */}
+      <section>
+        <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-[#8892A0]">Resources</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <ResourceCard title="Memory" used={memoryUsed} total={memoryTotal} />
+          <ResourceCard title="Disk" used={diskUsed} total={diskTotal} />
+          <InfoCard title="CPU Cores" value={String(info.cpu_cores || '-')} />
+        </div>
+      </section>
+
+      {/* Network */}
+      <section>
+        <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-[#8892A0]">Network</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <InfoCard title="Uptime" value={info.uptime ? `${Number(info.uptime).toLocaleString()}s` : '-'} />
+          <InfoCard title="IPs" value={Array.isArray(info.ips) ? info.ips.join(', ') : '-'} />
+        </div>
+      </section>
 
       <InstallCommandCard
         installCommand={installCommand}
@@ -109,24 +153,4 @@ function NodeDetailPage() {
       />
     </div>
   )
-}
-
-function InfoCard({ title, value }: { title: string; value?: string }) {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-lg font-semibold break-words font-mono tabular-nums">{value || '-'}</p>
-      </CardContent>
-    </Card>
-  )
-}
-
-function formatBytes(bytes?: number) {
-  if (!bytes || bytes === 0) return '-'
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`
 }
