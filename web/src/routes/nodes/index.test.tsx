@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
@@ -64,6 +63,9 @@ describe('NodesPage theme', () => {
     })
 
     const nodesRoute = NodesIndexRoute.update({
+      // @ts-expect-error UpdatableRouteOptions does not include id/path/getParentRoute for file routes, but routeTree.gen.ts sets them at runtime.
+      id: '/nodes/',
+      path: '/nodes/',
       getParentRoute: () => rootRoute,
     })
 

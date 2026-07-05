@@ -10,7 +10,16 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
   return {
     ...actual,
-    Link: ({ children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement>) => <a {...props}>{children}</a>,
+    Link: ({
+      children,
+      to,
+      params,
+      ...props
+    }: { to?: string; params?: Record<string, string> } & AnchorHTMLAttributes<HTMLAnchorElement>) => (
+      <a {...props} data-to={to} data-params={params ? JSON.stringify(params) : undefined}>
+        {children}
+      </a>
+    ),
   }
 })
 
@@ -24,9 +33,27 @@ const baseNode: Node = {
   created_at: new Date().toISOString(),
 }
 
+function renderCard(
+  node: Node,
+  handlers: Partial<{
+    onInstallCommand: (id: string) => void
+    onReset: (id: string) => void
+    onRotateToken: (id: string) => void
+  }> = {}
+) {
+  return render(
+    <NodeCard
+      node={node}
+      onInstallCommand={handlers.onInstallCommand ?? (() => {})}
+      onReset={handlers.onReset ?? (() => {})}
+      onRotateToken={handlers.onRotateToken ?? (() => {})}
+    />
+  )
+}
+
 describe('NodeCard', () => {
   it('renders name, status, platform, ip and resource snapshot', () => {
-    render(<NodeCard node={baseNode} onInstallCommand={() => {}} onReset={() => {}} onRotateToken={() => {}} />)
+    renderCard(baseNode)
     expect(screen.getByText('prod-web-01')).toBeInTheDocument()
     expect(screen.getByText('ONLINE')).toBeInTheDocument()
     expect(screen.getByText('LINUX')).toBeInTheDocument()
@@ -35,13 +62,13 @@ describe('NodeCard', () => {
   })
 
   it('shows last seen relative time', () => {
-    render(<NodeCard node={baseNode} onInstallCommand={() => {}} onReset={() => {}} onRotateToken={() => {}} />)
+    renderCard(baseNode)
     expect(screen.getByText(/\d+m ago/)).toBeInTheDocument()
   })
 
   it('emits reset action for online node', async () => {
     const onReset = vi.fn()
-    render(<NodeCard node={baseNode} onReset={onReset} onInstallCommand={() => {}} onRotateToken={() => {}} />)
+    renderCard(baseNode, { onReset })
     await userEvent.click(screen.getByRole('button', { name: /actions/i }))
     await userEvent.click(screen.getByText('Reset'))
     expect(onReset).toHaveBeenCalledWith('n1')
@@ -50,9 +77,60 @@ describe('NodeCard', () => {
   it('emits install command action for offline node', async () => {
     const onInstallCommand = vi.fn()
     const offlineNode: Node = { ...baseNode, status: 'offline' }
-    render(<NodeCard node={offlineNode} onInstallCommand={onInstallCommand} onReset={() => {}} onRotateToken={() => {}} />)
+    renderCard(offlineNode, { onInstallCommand })
     await userEvent.click(screen.getByRole('button', { name: /actions/i }))
     await userEvent.click(screen.getByText('Install Command'))
     expect(onInstallCommand).toHaveBeenCalledWith('n1')
+  })
+
+  it('renders pending status', () => {
+    const pendingNode: Node = { ...baseNode, status: 'pending' }
+    renderCard(pendingNode)
+    expect(screen.getByText('PENDING')).toBeInTheDocument()
+  })
+
+  it('emits rotate token action', async () => {
+    const onRotateToken = vi.fn()
+    renderCard(baseNode, { onRotateToken })
+    await userEvent.click(screen.getByRole('button', { name: /actions/i }))
+    await userEvent.click(screen.getByText('Rotate Token'))
+    expect(onRotateToken).toHaveBeenCalledWith('n1')
+  })
+
+  it('renders View Details link with correct target and params', async () => {
+    renderCard(baseNode)
+    await userEvent.click(screen.getByRole('button', { name: /actions/i }))
+    const link = screen.getByRole('menuitem', { name: 'View Details' })
+    expect(link).toHaveAttribute('data-to', '/nodes/$nodeId')
+    expect(link).toHaveAttribute('data-params', JSON.stringify({ nodeId: 'n1' }))
+  })
+
+  it('shows placeholders for missing platform, ips, last seen and hides snapshot', () => {
+    const sparseNode: Node = {
+      id: 'n2',
+      name: 'sparse',
+      status: 'online',
+      created_at: new Date().toISOString(),
+    }
+    renderCard(sparseNode)
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(3)
+    expect(screen.queryByText(/CPU|MEM/)).not.toBeInTheDocument()
+  })
+
+  it('handles an invalid last_seen_at date gracefully', () => {
+    const invalidDateNode: Node = { ...baseNode, last_seen_at: 'not-a-date' }
+    renderCard(invalidDateNode)
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('handles memory_total of zero without showing Infinity', () => {
+    const zeroTotalNode: Node = {
+      ...baseNode,
+      system_info: { ...baseNode.system_info, memory_total: 0 },
+    }
+    renderCard(zeroTotalNode)
+    expect(screen.queryByText(/Infinity/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/MEM/)).not.toBeInTheDocument()
+    expect(screen.getByText(/CPU 12%/)).toBeInTheDocument()
   })
 })

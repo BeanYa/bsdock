@@ -39,6 +39,7 @@ const statusColorClasses: Record<NodeStatus, string> = {
 function formatRelativeTime(value?: string): string {
   if (!value) return '—'
   const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
   const now = new Date()
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
   if (seconds < 60) return 'just now'
@@ -58,8 +59,10 @@ function getPrimaryIP(info?: Record<string, unknown>): string {
 
 function getResourceSnapshot(info?: Record<string, unknown>): string | null {
   const cpu = info?.cpu_percent
-  const mem = info?.memory_used && info?.memory_total
-    ? Math.round((Number(info.memory_used) / Number(info.memory_total)) * 100)
+  const total = Number(info?.memory_total ?? NaN)
+  const used = Number(info?.memory_used ?? NaN)
+  const mem = Number.isFinite(total) && total > 0 && Number.isFinite(used)
+    ? Math.round((used / total) * 100)
     : null
   const parts: string[] = []
   if (typeof cpu === 'number') parts.push(`CPU ${cpu.toFixed(0)}%`)
