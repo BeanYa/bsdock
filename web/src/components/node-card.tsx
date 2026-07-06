@@ -134,13 +134,16 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
     <Card
       data-testid="node-card"
       className={cn(
-        'relative flex flex-col overflow-hidden border-[#2A3546] bg-[#1F2833] p-4 transition-colors hover:bg-[#2A3546]'
+        'group relative flex flex-col overflow-hidden rounded-xl border-white/[0.08] bg-[rgba(20,28,45,0.55)] p-4 backdrop-blur-xl',
+        'shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)]',
+        'transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-[rgba(0,240,255,0.35)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_12px_40px_rgba(0,240,255,0.08)]'
       )}
     >
       <div
         className={cn(
-          'absolute left-0 top-0 h-full w-1',
-          statusClasses.bg
+          'absolute left-0 right-0 top-0 h-[3px] transition-opacity',
+          statusClasses.bg,
+          'group-hover:status-pulse'
         )}
         aria-hidden="true"
       />
@@ -152,14 +155,14 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
         className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00F0FF]"
       />
 
-      <div className="relative z-10 pl-3 pointer-events-none">
+      <div className="relative z-10 pointer-events-none">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#8892A0]">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#8B95A8]">
               Node
             </span>
             <h3
-              className="truncate text-lg font-semibold tracking-tight text-[#C5C6C7]"
+              className="truncate text-lg font-semibold tracking-tight text-[#E8EBF0]"
               title={node.name}
             >
               {node.name}
@@ -172,17 +175,17 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="pointer-events-auto -mr-2 -mt-1 h-8 w-8 shrink-0 text-[#8892A0] hover:bg-[#2A3546] hover:text-[#C5C6C7]"
+                  className="pointer-events-auto -mr-2 -mt-1 h-8 w-8 shrink-0 text-[#8B95A8] hover:bg-[rgba(8,10,15,0.45)] hover:text-[#E8EBF0]"
                 >
                   <MoreHorizontal className="h-4 w-4" />
                   <span className="sr-only">Actions</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="border-[#2A3546] bg-[#1F2833]">
-                <DropdownMenuItem onClick={() => onRotateToken(node.id)} className="focus:bg-[#2A3546] focus:text-[#C5C6C7]">
+              <DropdownMenuContent align="end" className="border-white/[0.08] bg-[rgba(20,28,45,0.85)] backdrop-blur-xl">
+                <DropdownMenuItem onClick={() => onRotateToken(node.id)} className="focus:bg-[rgba(8,10,15,0.45)] focus:text-[#E8EBF0]">
                   Rotate Token
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className="focus:bg-[#2A3546] focus:text-[#C5C6C7]">
+                <DropdownMenuItem asChild className="focus:bg-[rgba(8,10,15,0.45)] focus:text-[#E8EBF0]">
                   <Link to="/nodes/$nodeId" params={{ nodeId: node.id }}>
                     View Details
                   </Link>
@@ -192,8 +195,8 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
           </div>
         </div>
 
-        <div className="mt-1 flex items-center gap-2 text-xs text-[#8892A0]">
-          <span className="rounded border border-[#2A3546] bg-[#0B0C10] px-1.5 py-0.5 font-mono uppercase">
+        <div className="mt-1 flex items-center gap-2 text-xs text-[#8B95A8]">
+          <span className="rounded border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-1.5 py-0.5 font-mono uppercase">
             {node.platform || '—'}
           </span>
           <span className="font-mono">{getPrimaryIP(info)}</span>
@@ -207,21 +210,21 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-2">
-          <div className="rounded-md border border-[#2A3546]/60 bg-[#0B0C10]/60 p-2">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-[#8892A0]">IP</p>
-            <p className="truncate font-mono text-xs font-semibold text-[#C5C6C7]">{getPrimaryIP(info)}</p>
+          <div className="rounded-md border border-white/[0.08] bg-[rgba(8,10,15,0.45)] p-2">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">IP</p>
+            <p className="truncate font-mono text-xs font-semibold text-[#E8EBF0]">{getPrimaryIP(info)}</p>
           </div>
-          <div className="rounded-md border border-[#2A3546]/60 bg-[#0B0C10]/60 p-2">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-[#8892A0]">CPU</p>
-            <p className="truncate font-mono text-xs font-semibold text-[#C5C6C7]">{getCpuSubtitle(info) ?? '—'}</p>
+          <div className="rounded-md border border-white/[0.08] bg-[rgba(8,10,15,0.45)] p-2">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">CPU</p>
+            <p className="truncate font-mono text-xs font-semibold text-[#E8EBF0]">{getCpuSubtitle(info) ?? '—'}</p>
           </div>
-          <div className="rounded-md border border-[#2A3546]/60 bg-[#0B0C10]/60 p-2">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-[#8892A0]">Uptime</p>
-            <p className="truncate font-mono text-xs font-semibold text-[#C5C6C7]">{getUptime(info) ?? '—'}</p>
+          <div className="rounded-md border border-white/[0.08] bg-[rgba(8,10,15,0.45)] p-2">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">Uptime</p>
+            <p className="truncate font-mono text-xs font-semibold text-[#E8EBF0]">{getUptime(info) ?? '—'}</p>
           </div>
-          <div className="rounded-md border border-[#2A3546]/60 bg-[#0B0C10]/60 p-2">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-[#8892A0]">Version</p>
-            <p className="truncate font-mono text-xs font-semibold text-[#C5C6C7]">{info?.version != null ? String(info.version) : '—'}</p>
+          <div className="rounded-md border border-white/[0.08] bg-[rgba(8,10,15,0.45)] p-2">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">Version</p>
+            <p className="truncate font-mono text-xs font-semibold text-[#E8EBF0]">{info?.version != null ? String(info.version) : '—'}</p>
           </div>
         </div>
 
@@ -230,7 +233,7 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
             variant="outline"
             size="sm"
             onClick={() => onInstallCommand(node.id)}
-            className="flex-1 border-[#2A3546] bg-[#0B0C10] text-[#C5C6C7] hover:border-[#00F0FF] hover:bg-[#00F0FF]/10 hover:text-[#00F0FF]"
+            className="flex-1 border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] hover:border-[#00F0FF] hover:bg-[rgba(0,240,255,0.10)] hover:text-[#00F0FF]"
           >
             <Eye className="mr-2 h-4 w-4" />
             Install Command
@@ -240,7 +243,7 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
               variant="outline"
               size="sm"
               onClick={() => onReset(node.id)}
-              className="flex-1 border-[#2A3546] bg-[#0B0C10] text-[#C5C6C7] hover:border-[#FFC107] hover:bg-[#FFC107]/10 hover:text-[#FFC107]"
+              className="flex-1 border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] hover:border-[#FFC107] hover:bg-[rgba(255,193,7,0.10)] hover:text-[#FFC107]"
             >
               <RotateCcw className="mr-2 h-4 w-4" />
               Reset

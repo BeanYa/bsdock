@@ -214,23 +214,23 @@ function NodesPage() {
         </Dialog>
       </PageHeader>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] bg-[rgba(20,28,45,0.55)] p-3 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)] sm:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8B95A8]" />
           <Input
             placeholder="Search nodes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="border-white/[0.08] bg-[rgba(8,10,15,0.45)] pl-9 text-[#E8EBF0] placeholder:text-[#8B95A8] focus-visible:ring-[#00F0FF]"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
+          <SelectTrigger className="w-full border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] focus:ring-[#00F0FF] sm:w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="border-white/[0.08] bg-[rgba(20,28,45,0.85)] backdrop-blur-xl">
             {statusOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
+              <SelectItem key={option.value} value={option.value} className="focus:bg-[rgba(8,10,15,0.45)] focus:text-[#E8EBF0]">
                 {option.label}
               </SelectItem>
             ))}
@@ -243,10 +243,11 @@ function NodesPage() {
           Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="relative flex flex-col overflow-hidden rounded-lg border border-[#2A3546] bg-[#1F2833] p-4"
+              className="group relative flex flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-[rgba(20,28,45,0.55)] p-4 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)]"
             >
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="mt-3 h-4 w-16" />
+              <div className="absolute left-0 right-0 top-0 h-[3px] bg-[#8B95A8]/50" aria-hidden="true" />
+              <Skeleton className="h-5 w-3/4 bg-[rgba(8,10,15,0.45)]" />
+              <Skeleton className="mt-3 h-4 w-16 bg-[rgba(8,10,15,0.45)]" />
             </div>
           ))
         ) : filteredNodes.length === 0 ? (
