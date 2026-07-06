@@ -1,4 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card'
+import { GlassCard } from '@/components/glass-card'
 import { Activity } from 'lucide-react'
 import { ResourceRing } from '@/components/resource-ring'
 import { InfoCard } from '@/components/info-card'
@@ -27,7 +28,7 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
   const diskPercent = percent(status?.disk.used, status?.disk.total)
 
   return (
-    <Card className="glass relative overflow-hidden">
+    <GlassCard>
       <CardContent className="space-y-4 p-4 sm:p-5">
         <div className="flex items-start justify-between">
           <div>
@@ -128,6 +129,6 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
           </Card>
         </div>
       </CardContent>
-    </Card>
+    </GlassCard>
   )
 }

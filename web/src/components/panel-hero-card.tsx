@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
+import { CardContent } from '@/components/ui/card'
+import { GlassCard } from '@/components/glass-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -54,7 +55,7 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
   }
 
   return (
-    <Card className="glass relative overflow-hidden">
+    <GlassCard>
       <CardContent className="flex h-full flex-col justify-between p-5 sm:p-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -85,7 +86,10 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
 
         <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-[#8B95A8] sm:text-base">
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            <span
+              className="h-2 w-2 rounded-full bg-emerald-400"
+              aria-label={healthy ? 'System Operational' : 'Degraded'}
+            />
             Panel v{status?.version ?? '—'}
           </span>
           <span className="hidden sm:inline">•</span>
@@ -157,6 +161,6 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
           </div>
         </DialogContent>
       </Dialog>
-    </Card>
+    </GlassCard>
   )
 }
