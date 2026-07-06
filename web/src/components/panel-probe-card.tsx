@@ -27,7 +27,7 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
   const diskPercent = percent(status?.disk.used, status?.disk.total)
 
   return (
-    <Card className="border-[#2A3546] bg-[#1F2833]">
+    <Card className="relative overflow-hidden border-white/[0.08] bg-[rgba(20,28,45,0.55)] backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)]">
       <CardContent className="space-y-4 p-4 sm:p-5">
         <div className="flex items-start justify-between">
           <div>
@@ -43,7 +43,7 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
         </div>
 
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          <Card className="border-[#2A3546] bg-[#0B0C10]/40">
+          <Card className="border-white/[0.08] bg-[rgba(8,10,15,0.45)]">
             <CardContent className="flex flex-col items-center justify-center p-3 sm:p-4">
               <ResourceRing
                 label="CPU"
@@ -53,7 +53,7 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
               />
             </CardContent>
           </Card>
-          <Card className="border-[#2A3546] bg-[#0B0C10]/40">
+          <Card className="border-white/[0.08] bg-[rgba(8,10,15,0.45)]">
             <CardContent className="flex flex-col items-center justify-center p-3 sm:p-4">
               <ResourceRing
                 label="MEM"
@@ -67,7 +67,7 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
               />
             </CardContent>
           </Card>
-          <Card className="border-[#2A3546] bg-[#0B0C10]/40">
+          <Card className="border-white/[0.08] bg-[rgba(8,10,15,0.45)]">
             <CardContent className="flex flex-col items-center justify-center p-3 sm:p-4">
               <ResourceRing
                 label="Disk"
@@ -100,7 +100,7 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
         </div>
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Card className="border-[#2A3546]/60 bg-[#0B0C10]/40">
+          <Card className="border-white/[0.08] bg-[rgba(8,10,15,0.45)]">
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2A3546]/60">
@@ -113,7 +113,7 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-[#2A3546]/60 bg-[#0B0C10]/40">
+          <Card className="border-white/[0.08] bg-[rgba(8,10,15,0.45)]">
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2A3546]/60">

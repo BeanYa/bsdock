@@ -54,7 +54,7 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
   }
 
   return (
-    <Card className="relative overflow-hidden border-[#2A3546] bg-[#1F2833]">
+    <Card className="relative overflow-hidden border-white/[0.08] bg-[rgba(20,28,45,0.55)] backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)]">
       <CardContent className="flex h-full flex-col justify-between p-5 sm:p-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -62,8 +62,8 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
               B
             </div>
             <div>
-              <p className="text-sm font-medium text-[#8892A0]">Hello Admin</p>
-              <h2 className="text-xl font-semibold tracking-tight text-[#C5C6C7]">BSDock</h2>
+              <p className="text-sm font-medium text-[#8B95A8]">Hello Admin</p>
+              <h2 className="text-xl font-semibold tracking-tight text-[#E8EBF0]">BSDock</h2>
             </div>
           </div>
           <Badge
@@ -76,14 +76,14 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
         </div>
 
         <div className="mt-6 space-y-1">
-          <h1 className="text-3xl font-semibold leading-tight tracking-tight text-[#C5C6C7] sm:text-4xl">
+          <h1 className="text-3xl font-semibold leading-tight tracking-tight text-[#E8EBF0] sm:text-4xl">
             Your control plane, live.
             <br />
             Currently routing through BSDock.
           </h1>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-[#8892A0] sm:text-base">
+        <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-[#8B95A8] sm:text-base">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
             Panel v{status?.version ?? '—'}
@@ -98,7 +98,7 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
           <Button
             variant="outline"
             size="sm"
-            className="border-[#2A3546] bg-[#0B0C10]/60 text-[#C5C6C7] hover:bg-[#2A3546] hover:text-[#C5C6C7]"
+            className="border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] hover:bg-white/[0.08] hover:text-[#E8EBF0]"
             onClick={() => setUpdateDialogOpen(true)}
           >
             <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
@@ -106,7 +106,7 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
           </Button>
           <a
             href="/nodes"
-            className="inline-flex h-9 items-center justify-center rounded-md border border-[#2A3546] bg-[#0B0C10]/60 px-3 text-sm font-medium text-[#C5C6C7] transition-colors hover:bg-[#2A3546] hover:text-[#C5C6C7]"
+            className="inline-flex h-9 items-center justify-center rounded-md border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-3 text-sm font-medium text-[#E8EBF0] transition-colors hover:bg-white/[0.08] hover:text-[#E8EBF0]"
           >
             Usage & Counts
             <ArrowUpRight className="ml-1.5 h-3.5 w-3.5" />
@@ -115,10 +115,10 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
       </CardContent>
 
       <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
-        <DialogContent className="border-[#2A3546] bg-[#1F2833] text-[#C5C6C7] sm:max-w-md">
+        <DialogContent className="border-[#2A3546] bg-[#1F2833] text-[#E8EBF0] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Update Panel</DialogTitle>
-            <DialogDescription className="text-[#8892A0]">
+            <DialogDescription className="text-[#8B95A8]">
               Are you sure you want to update the panel to the latest version? This will restart the
               control plane and may briefly interrupt service.
             </DialogDescription>
@@ -126,15 +126,15 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
           <div className="space-y-4">
             <div className="rounded-md border border-[#2A3546] bg-[#0B0C10]/60 p-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-[#8892A0]">Current version</span>
-                <span className="font-mono text-[#C5C6C7]">{status?.version ?? '—'}</span>
+                <span className="text-[#8B95A8]">Current version</span>
+                <span className="font-mono text-[#E8EBF0]">{status?.version ?? '—'}</span>
               </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="border-[#2A3546] bg-transparent text-[#C5C6C7] hover:bg-[#2A3546] hover:text-[#C5C6C7]"
+                className="border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] hover:bg-white/[0.08] hover:text-[#E8EBF0]"
                 onClick={() => setUpdateDialogOpen(false)}
                 disabled={updating}
               >

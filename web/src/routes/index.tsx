@@ -48,24 +48,28 @@ function HomePage() {
             value={status?.nodes.total ?? '—'}
             description="Registered agents"
             icon={<Server className="h-4 w-4" />}
+            status="online"
           />
           <StatCard
             title="Online"
             value={status?.nodes.online ?? '—'}
             description="Active agents"
             icon={<CheckCircle2 className="h-4 w-4 text-emerald-400" />}
+            status="online"
           />
           <StatCard
             title="Offline"
             value={status?.nodes.offline ?? '—'}
             description="Disconnected"
             icon={<XCircle className="h-4 w-4 text-rose-400" />}
+            status="offline"
           />
           <StatCard
             title="Pending"
             value={status?.nodes.pending ?? '—'}
             description="Awaiting install"
             icon={<Clock className="h-4 w-4 text-amber-400" />}
+            status="pending"
           />
         </div>
       </section>
