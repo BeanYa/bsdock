@@ -13,4 +13,9 @@ describe('GlassCard', () => {
     const bar = container.querySelector('[data-testid="status-light"]')
     expect(bar).toHaveClass('bg-[#39FF14]')
   })
+
+  it('labels the status light bar for screen readers', () => {
+    render(<GlassCard status="offline">content</GlassCard>)
+    expect(screen.getByLabelText('status: offline')).toBeInTheDocument()
+  })
 })
