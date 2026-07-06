@@ -25,6 +25,8 @@ function RootComponent() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <div className="fixed inset-0 -z-10 bg-background" aria-hidden="true" />
+      <div className="fixed inset-0 -z-10 ambient-light" aria-hidden="true" />
       <AppSidebar
         collapsed={collapsed}
         onToggle={() => setCollapsed((v) => !v)}

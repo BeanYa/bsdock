@@ -30,9 +30,9 @@ function NavLinks({ collapsed, onClick }: { collapsed?: boolean; onClick?: () =>
             onClick={onClick}
             className={cn(
               'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-              active
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+            active
+              ? 'border-l-2 border-[#00F0FF] bg-[rgba(0,240,255,0.08)] text-[#00F0FF] shadow-[inset_0_0_12px_rgba(0,240,255,0.08)]'
+              : 'text-[#8B95A8] hover:bg-[rgba(255,255,255,0.05)] hover:text-[#E8EBF0]',
               collapsed && 'justify-center px-2'
             )}
             title={collapsed ? item.label : undefined}
@@ -76,7 +76,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       <aside
         data-testid="desktop-sidebar"
         className={cn(
-          'fixed left-0 top-0 z-40 hidden h-screen flex-col border-r bg-card transition-all duration-300 ease-in-out lg:flex',
+          'fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-white/[0.08] bg-[rgba(20,28,45,0.75)] backdrop-blur-xl transition-all duration-300 ease-in-out lg:flex',
           collapsed ? 'w-16' : 'w-64'
         )}
       >
@@ -91,7 +91,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             onClick={onMobileClose}
             aria-hidden="true"
           />
-          <aside data-testid="mobile-sidebar" className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r bg-card lg:hidden">
+          <aside data-testid="mobile-sidebar" className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-white/[0.08] bg-[rgba(20,28,45,0.75)] backdrop-blur-xl lg:hidden">
             <div className="flex h-14 items-center justify-between border-b px-3">
               <Link to="/" className="flex items-center gap-2 font-bold" onClick={onMobileClose}>
                 <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">

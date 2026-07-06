@@ -24,7 +24,7 @@ export function AppHeader({ onMobileMenuOpen }: AppHeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-white/[0.08] bg-[rgba(8,10,15,0.75)] px-4 backdrop-blur-xl">
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
