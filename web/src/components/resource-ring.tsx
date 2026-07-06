@@ -36,9 +36,11 @@ export function ResourceRing({ label, percent, size = 'md', subtitle, color: col
     : defaultColor ?? '#39FF14'
   const color = colorProp ?? usageColor
 
+  const labelColor = LABEL_COLORS[label.toLowerCase()] ?? '#8B95A8'
+
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <div className="relative">
+      <div className="relative drop-shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
         <svg
           className={`${classes.svg} -rotate-90 transform drop-shadow-[0_0_6px_${color}40]`}
           viewBox={`0 0 ${classes.box} ${classes.box}`}
@@ -66,14 +68,14 @@ export function ResourceRing({ label, percent, size = 'md', subtitle, color: col
             className="transition-[stroke-dashoffset] duration-700 ease-out motion-reduce:transition-none"
           />
         </svg>
-        <span className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-mono font-bold leading-none text-[#C5C6C7] ${classes.percent}`}>
+        <span className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-mono font-bold leading-none text-[#E8EBF0] ${classes.percent}`}>
           {safePercent != null ? `${Math.round(safePercent)}%` : '—'}
         </span>
       </div>
       <div className="text-center">
-        <div className={`font-mono font-semibold uppercase tracking-wider text-[#8892A0] ${classes.label}`}>{label}</div>
+        <div className={`font-mono font-semibold uppercase tracking-wider ${classes.label}`} style={{ color: labelColor }}>{label}</div>
         {subtitle != null && subtitle !== '' && (
-          <div className="mt-1 text-xs font-mono text-[#8892A0]/70 sm:text-sm">{subtitle}</div>
+          <div className="mt-1 text-xs font-mono text-[#8B95A8]/70 sm:text-sm">{subtitle}</div>
         )}
       </div>
     </div>

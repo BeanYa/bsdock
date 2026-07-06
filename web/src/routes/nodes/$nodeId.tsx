@@ -153,27 +153,21 @@ function NodeDetailPage() {
         </Link>
       </PageHeader>
 
-      {/* Server Probe style overview */}
-      <div className="relative overflow-hidden rounded-2xl border border-[#2A3546] bg-[#1F2833] p-4 sm:p-5">
-        <div
-          className={cn(
-            'absolute left-0 top-0 h-full w-1.5',
-            getStatusColorClasses(node.status).bg
-          )}
-          aria-hidden="true"
-        />
+      {/* Status hero */}
+      <div className="relative overflow-hidden rounded-xl border border-white/[0.08] bg-[rgba(20,28,45,0.55)] p-4 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)] sm:p-5">
+        <div className={cn('absolute left-0 right-0 top-0 h-1', getStatusColorClasses(node.status).bg)} aria-hidden="true" />
 
-        <div className="pl-3 sm:pl-4">
+        <div>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#8892A0]">Server Probe</span>
-              <h2 className="text-xl font-semibold tracking-tight text-[#C5C6C7] sm:text-2xl">{node.name}</h2>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#8B95A8]">Server Probe</span>
+              <h2 className="text-xl font-semibold tracking-tight text-[#E8EBF0] sm:text-2xl">{node.name}</h2>
             </div>
             <StatusBadge status={node.status} variant="dot" />
           </div>
 
           <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-            <Card className="border-[#2A3546] bg-[#0B0C10]/40">
+            <Card className="border-white/[0.08] bg-[rgba(8,10,15,0.45)]">
               <CardContent className="flex flex-col items-center justify-center p-4 sm:p-5">
                 <ResourceRing
                   label="CPU"
@@ -183,7 +177,7 @@ function NodeDetailPage() {
                 />
               </CardContent>
             </Card>
-            <Card className="border-[#2A3546] bg-[#0B0C10]/40">
+            <Card className="border-white/[0.08] bg-[rgba(8,10,15,0.45)]">
               <CardContent className="flex flex-col items-center justify-center p-4 sm:p-5">
                 <ResourceRing
                   label="MEM"
@@ -193,7 +187,7 @@ function NodeDetailPage() {
                 />
               </CardContent>
             </Card>
-            <Card className="border-[#2A3546] bg-[#0B0C10]/40">
+            <Card className="border-white/[0.08] bg-[rgba(8,10,15,0.45)]">
               <CardContent className="flex flex-col items-center justify-center p-4 sm:p-5">
                 <ResourceRing
                   label="Disk"
@@ -206,69 +200,69 @@ function NodeDetailPage() {
           </div>
 
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <div className="flex items-center justify-between rounded-lg bg-[#0B0C10]/60 px-3 py-2 sm:flex-col sm:items-start sm:justify-center sm:gap-1">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-[#8892A0]">Network</span>
-              <span className="font-mono text-xs font-semibold text-[#C5C6C7]">{formatSpeed(info.network_speed ?? info.net_speed)}</span>
+            <div className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-3 py-2 sm:flex-col sm:items-start sm:justify-center sm:gap-1">
+              <span className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">Network</span>
+              <span className="font-mono text-xs font-semibold text-[#E8EBF0]">{formatSpeed(info.network_speed ?? info.net_speed)}</span>
             </div>
-            <div className="flex items-center justify-between rounded-lg bg-[#0B0C10]/60 px-3 py-2 sm:flex-col sm:items-start sm:justify-center sm:gap-1">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-[#8892A0]">Packets</span>
-              <span className="font-mono text-xs font-semibold text-[#C5C6C7]">{formatPackets(info.packets_per_sec ?? info.packets)}</span>
+            <div className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-3 py-2 sm:flex-col sm:items-start sm:justify-center sm:gap-1">
+              <span className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">Packets</span>
+              <span className="font-mono text-xs font-semibold text-[#E8EBF0]">{formatPackets(info.packets_per_sec ?? info.packets)}</span>
             </div>
-            <div className="flex items-center justify-between rounded-lg bg-[#0B0C10]/60 px-3 py-2 sm:flex-col sm:items-start sm:justify-center sm:gap-1">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-[#8892A0]">Disk I/O</span>
-              <span className="font-mono text-xs font-semibold text-[#C5C6C7]">{formatSpeed(info.disk_io)}</span>
+            <div className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-3 py-2 sm:flex-col sm:items-start sm:justify-center sm:gap-1">
+              <span className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">Disk I/O</span>
+              <span className="font-mono text-xs font-semibold text-[#E8EBF0]">{formatSpeed(info.disk_io)}</span>
             </div>
           </div>
 
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-[#2A3546]/60 bg-[#0B0C10]/40 p-3 sm:p-4">
-              <h3 className="text-[10px] font-medium uppercase tracking-wider text-[#8892A0]">Total Data</h3>
+            <div className="rounded-xl border border-white/[0.08] bg-[rgba(8,10,15,0.45)] p-3 sm:p-4">
+              <h3 className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">Total Data</h3>
               <div className="mt-2 grid grid-cols-2 gap-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2A3546]/60">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgba(8,10,15,0.45)]">
                     <ArrowUp className="h-3.5 w-3.5 text-[#7DD3C0]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] text-[#8892A0]">Sent</p>
-                    <p className="truncate font-mono text-xs font-semibold text-[#C5C6C7]">{formatBytes(Number(networkSent))}</p>
+                    <p className="text-[10px] text-[#8B95A8]">Sent</p>
+                    <p className="truncate font-mono text-xs font-semibold text-[#E8EBF0]">{formatBytes(Number(networkSent))}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2A3546]/60">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgba(8,10,15,0.45)]">
                     <ArrowDown className="h-3.5 w-3.5 text-[#C084FC]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] text-[#8892A0]">Received</p>
-                    <p className="truncate font-mono text-xs font-semibold text-[#C5C6C7]">{formatBytes(Number(networkReceived))}</p>
+                    <p className="text-[10px] text-[#8B95A8]">Received</p>
+                    <p className="truncate font-mono text-xs font-semibold text-[#E8EBF0]">{formatBytes(Number(networkReceived))}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div data-testid="ip-section" className="rounded-xl border border-[#2A3546]/60 bg-[#0B0C10]/40 p-3 sm:p-4">
-              <h3 className="text-[10px] font-medium uppercase tracking-wider text-[#8892A0]">IP Addresses</h3>
+            <div data-testid="ip-section" className="rounded-xl border border-white/[0.08] bg-[rgba(8,10,15,0.45)] p-3 sm:p-4">
+              <h3 className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">IP Addresses</h3>
               <div className="mt-2 grid grid-cols-2 gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-[#8892A0]">IPv4</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">IPv4</p>
                   <div className="mt-1 space-y-0.5">
                     {ipv4.length > 0 ? (
                       ipv4.map((ip, index) => (
-                        <p key={`ipv4-${index}`} className="truncate font-mono text-xs font-semibold text-[#C5C6C7]">{ip}</p>
+                        <p key={`ipv4-${index}`} className="truncate font-mono text-xs font-semibold text-[#E8EBF0]">{ip}</p>
                       ))
                     ) : (
-                      <p className="text-xs font-semibold text-[#8892A0]">—</p>
+                      <p className="text-xs font-semibold text-[#8B95A8]">—</p>
                     )}
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-[#8892A0]">IPv6</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">IPv6</p>
                   <div className="mt-1 space-y-0.5">
                     {ipv6.length > 0 ? (
                       ipv6.map((ip, index) => (
-                        <p key={`ipv6-${index}`} className="break-all font-mono text-xs font-semibold text-[#C5C6C7]">{ip}</p>
+                        <p key={`ipv6-${index}`} className="break-all font-mono text-xs font-semibold text-[#E8EBF0]">{ip}</p>
                       ))
                     ) : (
-                      <p className="text-xs font-semibold text-[#8892A0]">—</p>
+                      <p className="text-xs font-semibold text-[#8B95A8]">—</p>
                     )}
                   </div>
                 </div>
@@ -293,7 +287,7 @@ function NodeDetailPage() {
 
       {/* Hardware */}
       <section>
-        <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-[#8892A0]">Hardware</h2>
+        <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-[#8B95A8]">Hardware</h2>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <InfoCard title="Hostname" value={info.hostname != null ? String(info.hostname) : undefined} />
           <InfoCard title="OS / Arch" value={Boolean(info.os) || Boolean(info.arch) ? `${info.os ? String(info.os) : '—'} / ${info.arch ? String(info.arch) : '—'}` : undefined} />
