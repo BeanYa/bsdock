@@ -15,6 +15,7 @@ import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
 import { InfoCard } from '@/components/info-card'
 import { ResourceRing } from '@/components/resource-ring'
+import { motion } from 'motion/react'
 
 export const Route = createFileRoute('/nodes/$nodeId')({
   component: NodeDetailPage,
@@ -145,16 +146,27 @@ function NodeDetailPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={node.name} description="Node details and system information">
-        <Link to="/nodes">
-          <Button variant="outline" size="icon" className="border-[#2A3546] bg-[#1F2833] text-[#C5C6C7] hover:bg-[#2A3546] hover:text-[#C5C6C7]">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-      </PageHeader>
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <PageHeader title={node.name} description="Node details and system information">
+          <Link to="/nodes">
+            <Button variant="outline" size="icon" className="border-[#2A3546] bg-[#1F2833] text-[#C5C6C7] hover:bg-[#2A3546] hover:text-[#C5C6C7]">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+        </PageHeader>
+      </motion.section>
 
       {/* Status hero */}
-      <div className="glass relative overflow-hidden rounded-xl p-4 sm:p-5">
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="glass relative overflow-hidden rounded-xl p-4 sm:p-5"
+      >
         <div className={cn('absolute left-0 right-0 top-0 h-1', getStatusColorClasses(node.status).bg)} aria-hidden="true" />
 
         <div>
@@ -283,10 +295,14 @@ function NodeDetailPage() {
             <InfoCard title="Version" value={info.version != null ? String(info.version) : undefined} />
           </div>
         </div>
-      </div>
+      </motion.section>
 
       {/* Hardware */}
-      <section>
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
         <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-[#8B95A8]">Hardware</h2>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <InfoCard title="Hostname" value={info.hostname != null ? String(info.hostname) : undefined} />
@@ -294,13 +310,19 @@ function NodeDetailPage() {
           <InfoCard title="Kernel" value={info.kernel != null ? String(info.kernel) : undefined} />
           <InfoCard title="Platform" value={node.platform} />
         </div>
-      </section>
+      </motion.section>
 
-      <InstallCommandCard
-        installCommand={installCommand}
-        loading={rotating}
-        onGenerate={handleRotateToken}
-      />
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        <InstallCommandCard
+          installCommand={installCommand}
+          loading={rotating}
+          onGenerate={handleRotateToken}
+        />
+      </motion.section>
     </div>
   )
 }

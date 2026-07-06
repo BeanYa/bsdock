@@ -7,6 +7,7 @@ import { TrafficCharts } from '@/components/traffic-chart'
 import { StatCard } from '@/components/stat-card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Server, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { motion } from 'motion/react'
 
 export const Route = createFileRoute('/')({
   component: IndexRoute,
@@ -38,7 +39,12 @@ function HomePage() {
 
   return (
     <div className="space-y-4">
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="grid grid-cols-1 gap-4 lg:grid-cols-3"
+      >
         <div className="lg:col-span-2">
           <PanelHeroCard status={status} />
         </div>
@@ -72,13 +78,22 @@ function HomePage() {
             status="pending"
           />
         </div>
-      </section>
+      </motion.section>
 
-      <section>
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
         <PanelProbeCard status={status} />
-      </section>
+      </motion.section>
 
-      <section className="space-y-3">
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="space-y-3"
+      >
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-[#8892A0] sm:text-sm">Signal Layer</p>
@@ -93,7 +108,7 @@ function HomePage() {
           received={status?.network.received ?? 0}
           updatedAt={lastUpdatedAt}
         />
-      </section>
+      </motion.section>
     </div>
   )
 }

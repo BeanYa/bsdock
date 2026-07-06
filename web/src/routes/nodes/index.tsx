@@ -12,6 +12,7 @@ import { InstallCommandDisplay } from '@/components/install-command-card'
 import { PageHeader } from '@/components/page-header'
 import { NodeCard, type Node } from '@/components/node-card'
 import { useToast } from '@/hooks/use-toast'
+import { motion } from 'motion/react'
 import {
   Dialog,
   DialogContent,
@@ -258,14 +259,20 @@ function NodesPage() {
             />
           </div>
         ) : (
-          filteredNodes.map((node) => (
-            <NodeCard
+          filteredNodes.map((node, index) => (
+            <motion.div
               key={node.id}
-              node={node as Node}
-              onInstallCommand={handleShowInstallCommand}
-              onReset={handleReset}
-              onRotateToken={handleShowInstallCommand}
-            />
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.05 }}
+            >
+              <NodeCard
+                node={node as Node}
+                onInstallCommand={handleShowInstallCommand}
+                onReset={handleReset}
+                onRotateToken={handleShowInstallCommand}
+              />
+            </motion.div>
           ))
         )}
       </div>
