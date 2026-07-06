@@ -122,5 +122,8 @@
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
     }
+    .ambient-light {
+      display: none;
+    }
   }
 }
