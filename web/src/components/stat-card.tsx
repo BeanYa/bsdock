@@ -17,13 +17,11 @@ export function StatCard({ title, value, description, icon, className, status }:
   return (
     <Card
       className={cn(
-        'relative overflow-hidden border-white/[0.08] bg-[rgba(20,28,45,0.55)] backdrop-blur-xl',
-        'shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)]',
-        'transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-[rgba(0,240,255,0.35)]',
+        'glass glass-hover relative overflow-hidden',
         className
       )}
     >
-      {status && <div className={cn('absolute left-0 right-0 top-0 h-[3px]', statusClasses?.bg)} aria-hidden="true" />}
+      {status && <div className={cn('absolute left-0 right-0 top-0 h-[3px]', statusClasses?.bg)} aria-label={`status: ${status}`} />}
       <CardContent className="flex items-center justify-between p-4">
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wider text-[#8B95A8]">{title}</p>
