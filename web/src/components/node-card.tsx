@@ -131,7 +131,7 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
   const ringSize = useIsBelowSm() ? 'sm' : 'md'
 
   return (
-    <GlassCard className="group flex flex-col p-4">
+    <GlassCard data-testid="node-card" className="group flex flex-col p-4">
       <div
         className={cn(
           'absolute left-0 right-0 top-0 h-[3px] transition-opacity',
@@ -148,7 +148,7 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
         className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00F0FF]"
       />
 
-      <div data-testid="node-card" className="relative z-10 pointer-events-none">
+      <div className="relative z-10 pointer-events-none">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[#8B95A8]">

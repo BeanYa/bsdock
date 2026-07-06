@@ -52,7 +52,7 @@ export function ResourceRing({ label, percent, size = 'md', subtitle, color: col
             cy={classes.box / 2}
             r={classes.radius}
             fill="none"
-            stroke="#2A3546"
+            stroke="#1E2A42"
             strokeWidth={classes.stroke}
           />
           <circle

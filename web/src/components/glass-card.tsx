@@ -1,14 +1,12 @@
 import { cn } from '@/lib/utils'
 import { getStatusColorClasses, type NodeStatus } from '@/lib/status'
 
-interface GlassCardProps {
-  children: React.ReactNode
-  className?: string
+interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
   status?: NodeStatus
   hover?: boolean
 }
 
-export function GlassCard({ children, className, status, hover = true }: GlassCardProps) {
+export function GlassCard({ children, className, status, hover = true, ...props }: GlassCardProps) {
   const statusClasses = status ? getStatusColorClasses(status) : null
 
   return (
@@ -18,6 +16,7 @@ export function GlassCard({ children, className, status, hover = true }: GlassCa
         hover && 'glass-hover cursor-default',
         className
       )}
+      {...props}
     >
       {status && (
         <div

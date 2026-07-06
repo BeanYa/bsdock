@@ -119,9 +119,9 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
       </CardContent>
 
       <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
-        <DialogContent className="border-[#2A3546] bg-[#1F2833] text-[#E8EBF0] sm:max-w-md">
+        <DialogContent className="glass text-[#E8EBF0] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Update Panel</DialogTitle>
+            <DialogTitle className="text-[#E8EBF0]">Update Panel</DialogTitle>
             <DialogDescription className="text-[#8B95A8]">
               Are you sure you want to update the panel to the latest version? This will restart the
               control plane and may briefly interrupt service.

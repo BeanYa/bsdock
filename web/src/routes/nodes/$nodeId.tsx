@@ -153,7 +153,7 @@ function NodeDetailPage() {
       >
         <PageHeader title={node.name} description="Node details and system information">
           <Link to="/nodes">
-            <Button variant="outline" size="icon" className="border-[#2A3546] bg-[#1F2833] text-[#C5C6C7] hover:bg-[#2A3546] hover:text-[#C5C6C7]">
+            <Button variant="outline" size="icon" className="border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] hover:bg-white/[0.08] hover:text-[#E8EBF0]">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
