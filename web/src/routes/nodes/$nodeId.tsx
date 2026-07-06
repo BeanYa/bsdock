@@ -154,7 +154,7 @@ function NodeDetailPage() {
       </PageHeader>
 
       {/* Status hero */}
-      <div className="relative overflow-hidden rounded-xl border border-white/[0.08] bg-[rgba(20,28,45,0.55)] p-4 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)] sm:p-5">
+      <div className="glass relative overflow-hidden rounded-xl p-4 sm:p-5">
         <div className={cn('absolute left-0 right-0 top-0 h-1', getStatusColorClasses(node.status).bg)} aria-hidden="true" />
 
         <div>
@@ -167,7 +167,7 @@ function NodeDetailPage() {
           </div>
 
           <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-            <Card className="border-white/[0.08] bg-[rgba(8,10,15,0.45)]">
+            <Card className="glass">
               <CardContent className="flex flex-col items-center justify-center p-4 sm:p-5">
                 <ResourceRing
                   label="CPU"
@@ -177,7 +177,7 @@ function NodeDetailPage() {
                 />
               </CardContent>
             </Card>
-            <Card className="border-white/[0.08] bg-[rgba(8,10,15,0.45)]">
+            <Card className="glass">
               <CardContent className="flex flex-col items-center justify-center p-4 sm:p-5">
                 <ResourceRing
                   label="MEM"
@@ -187,7 +187,7 @@ function NodeDetailPage() {
                 />
               </CardContent>
             </Card>
-            <Card className="border-white/[0.08] bg-[rgba(8,10,15,0.45)]">
+            <Card className="glass">
               <CardContent className="flex flex-col items-center justify-center p-4 sm:p-5">
                 <ResourceRing
                   label="Disk"
