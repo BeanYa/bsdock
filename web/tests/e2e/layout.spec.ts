@@ -132,32 +132,28 @@ test.describe('responsive layout', () => {
     await expect(page.getByTestId('mobile-sidebar')).toBeHidden()
   })
 
-  test('online node shows Reset menu and generates new install command', async ({ page }) => {
+  test('online node shows Reset button and generates new install command', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
     await login(page)
 
     const onlineCard = page.getByTestId('node-card').filter({ hasText: 'web-server-01' })
     await expect(onlineCard).toBeVisible()
-    await onlineCard.getByRole('button', { name: 'Actions' }).click()
 
-    await expect(page.getByRole('menuitem', { name: 'Reset' })).toBeVisible()
-    await expect(page.getByRole('menuitem', { name: 'Install Command' })).toBeHidden()
-
-    await page.getByRole('menuitem', { name: 'Reset' }).click()
-    await expect(page.getByText('Install Command')).toBeVisible()
+    await expect(onlineCard.getByRole('button', { name: 'Reset' })).toBeVisible()
+    await onlineCard.getByRole('button', { name: 'Reset' }).click()
+    await expect(page.getByRole('heading', { name: 'Install Command' })).toBeVisible()
     await expect(page.locator('pre')).toContainText('--token')
   })
 
-  test('offline node shows Install Command menu', async ({ page }) => {
+  test('offline node shows Install Command button and hides Reset', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
     await login(page)
 
     const offlineCard = page.getByTestId('node-card').filter({ hasText: 'db-server-01' })
     await expect(offlineCard).toBeVisible()
-    await offlineCard.getByRole('button', { name: 'Actions' }).click()
 
-    await expect(page.getByRole('menuitem', { name: 'Install Command' })).toBeVisible()
-    await expect(page.getByRole('menuitem', { name: 'Reset' })).toBeHidden()
+    await expect(offlineCard.getByRole('button', { name: 'Install Command' })).toBeVisible()
+    await expect(offlineCard.getByRole('button', { name: 'Reset' })).toBeHidden()
   })
 
   test('node detail cards adapt to screen size', async ({ page }) => {
@@ -168,13 +164,13 @@ test.describe('responsive layout', () => {
     await page.getByRole('menuitem', { name: 'View Details' }).click()
     await page.waitForURL(/\/nodes\/.+/)
 
-    await expect(page.getByRole('heading', { name: 'web-server-01' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'web-server-01' }).first()).toBeVisible()
     await expect(page.getByText('Hostname', { exact: true })).toBeVisible()
 
     await page.setViewportSize({ width: 375, height: 667 })
     await page.reload()
     await page.waitForURL(/\/nodes\/.+/)
 
-    await expect(page.getByRole('heading', { name: 'web-server-01' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'web-server-01' }).first()).toBeVisible()
   })
 })
