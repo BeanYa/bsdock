@@ -52,6 +52,8 @@ func main() {
 		log.Fatalf("load config: %v", err)
 	}
 
+	startTime := time.Now()
+
 	sqlDB, err := db.Open(cfg.Database.Path)
 	if err != nil {
 		log.Fatalf("open db: %v", err)
@@ -105,6 +107,9 @@ func main() {
 
 	nodesHandler := api.NewNodesHandler(nodeSvc, cfg)
 	nodesHandler.Register(apiRouter)
+
+	panelStatusHandler := api.NewPanelStatusHandler(nodeSvc, cfg, hub, startTime)
+	panelStatusHandler.Register(apiRouter)
 
 	// Install scripts (no auth)
 	r.HandleFunc("/install-agent.sh", func(w http.ResponseWriter, r *http.Request) {

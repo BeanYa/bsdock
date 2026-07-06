@@ -1,5 +1,5 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { ChevronLeft, ChevronRight, Server, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Home, Server, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -11,6 +11,7 @@ interface AppSidebarProps {
 }
 
 const navItems = [
+  { to: '/', label: 'Home', icon: Home },
   { to: '/nodes', label: 'Nodes', icon: Server },
 ]
 

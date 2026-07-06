@@ -1,12 +1,17 @@
 package websocket
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"sync/atomic"
+)
 
 type Hub struct {
-	clients    map[string]map[chan []byte]bool
-	register   chan subscription
-	unregister chan subscription
-	broadcast  chan broadcastMsg
+	clients       map[string]map[chan []byte]bool
+	register      chan subscription
+	unregister    chan subscription
+	broadcast     chan broadcastMsg
+	sentBytes     atomic.Int64
+	receivedBytes atomic.Int64
 }
 
 type subscription struct {
@@ -45,6 +50,7 @@ func (h *Hub) Run() {
 				}
 			}
 		case b := <-h.broadcast:
+			h.sentBytes.Add(int64(len(b.data)))
 			for ch := range h.clients[b.nodeID] {
 				select {
 				case ch <- b.data:
@@ -59,6 +65,21 @@ func (h *Hub) Run() {
 			}
 		}
 	}
+}
+
+// SentBytes returns the total number of bytes broadcast by the hub.
+func (h *Hub) SentBytes() int64 {
+	return h.sentBytes.Load()
+}
+
+// ReceivedBytes returns the total number of bytes received from clients.
+func (h *Hub) ReceivedBytes() int64 {
+	return h.receivedBytes.Load()
+}
+
+// AddReceivedBytes increments the received bytes counter.
+func (h *Hub) AddReceivedBytes(n int64) {
+	h.receivedBytes.Add(n)
 }
 
 func (h *Hub) Subscribe(nodeID string, ch chan []byte) {

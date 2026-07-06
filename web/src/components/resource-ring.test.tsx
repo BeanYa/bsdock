@@ -16,6 +16,16 @@ describe('ResourceRing', () => {
 
   it('uses sm size class when size is sm', () => {
     const { container } = render(<ResourceRing label="CPU" percent={10} size="sm" />)
-    expect(container.querySelector('svg')).toHaveClass('w-12')
+    expect(container.querySelector('svg')).toHaveClass('w-14')
+  })
+
+  it('uses lg size class when size is lg', () => {
+    const { container } = render(<ResourceRing label="CPU" percent={10} size="lg" />)
+    expect(container.querySelector('svg')).toHaveClass('w-36')
+  })
+
+  it('renders subtitle when provided', () => {
+    render(<ResourceRing label="CPU" percent={42} subtitle="4 Cores" />)
+    expect(screen.getByText('4 Cores')).toBeInTheDocument()
   })
 })

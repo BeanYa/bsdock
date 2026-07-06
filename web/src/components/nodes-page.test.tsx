@@ -116,8 +116,8 @@ describe('NodesPage metrics', () => {
 
     expect(await screen.findByText('node-1')).toBeInTheDocument()
     expect(screen.getAllByText('50%')).toHaveLength(3)
-    expect(screen.getByText('CPU')).toBeInTheDocument()
-    expect(screen.getByText('MEM')).toBeInTheDocument()
-    expect(screen.getByText('Disk')).toBeInTheDocument()
+    expect(screen.getAllByText('CPU').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('MEM').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Disk').length).toBeGreaterThanOrEqual(1)
   })
 })

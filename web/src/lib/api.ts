@@ -46,6 +46,39 @@ async function request(path: string, options: RequestInit = {}) {
   return res.json()
 }
 
+export interface PanelStatus {
+  hostname: string
+  version: string
+  go_version: string
+  platform: string
+  arch: string
+  uptime_seconds: number
+  ips: string[]
+  cpu: {
+    percent: number
+    cores: number
+    model: string
+  }
+  memory: {
+    used: number
+    total: number
+  }
+  disk: {
+    used: number
+    total: number
+  }
+  network: {
+    sent: number
+    received: number
+  }
+  nodes: {
+    total: number
+    online: number
+    offline: number
+    pending: number
+  }
+}
+
 export const api = {
   login: (username: string, password: string) =>
     request('/login', {
@@ -70,4 +103,5 @@ export const api = {
       method: 'POST',
       headers: { 'X-Panel-URL': getDefaultPanelURL() },
     }),
+  getPanelStatus: () => request('/panel/status') as Promise<PanelStatus>,
 }

@@ -84,9 +84,17 @@ func (h *AgentWSHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	h.broadcastNodeUpdate(claims.NodeID)
 
 	for {
-		var msg map[string]interface{}
-		if err := ws.ReadJSON(&msg); err != nil {
+		messageType, data, err := ws.ReadMessage()
+		if err != nil {
 			break
+		}
+		h.hub.AddReceivedBytes(int64(len(data)))
+		if messageType != websocket.TextMessage {
+			continue
+		}
+		var msg map[string]interface{}
+		if err := json.Unmarshal(data, &msg); err != nil {
+			continue
 		}
 		t, _ := msg["type"].(string)
 		switch t {

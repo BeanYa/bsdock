@@ -1,10 +1,115 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { isAuthenticated } from '@/lib/auth'
+import { usePanelStatus } from '@/hooks/usePanelStatus'
+import { PanelHeroCard } from '@/components/panel-hero-card'
+import { PanelProbeCard } from '@/components/panel-probe-card'
+import { TrafficCharts } from '@/components/traffic-chart'
+import { StatCard } from '@/components/stat-card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Server, CheckCircle2, XCircle, Clock } from 'lucide-react'
 
 export const Route = createFileRoute('/')({
   component: IndexRoute,
 })
 
 function IndexRoute() {
-  return isAuthenticated() ? <Navigate to="/nodes" /> : <Navigate to="/login" />
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" />
+  }
+
+  return <HomePage />
+}
+
+function HomePage() {
+  const { status, loading, error, lastUpdatedAt } = usePanelStatus(5000)
+
+  if (loading && !status) {
+    return <HomeSkeleton />
+  }
+
+  if (error && !status) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center rounded-lg border border-dashed border-[#2A3546] bg-[#1F2833]/50 p-8 text-center">
+        <h2 className="text-lg font-medium text-[#C5C6C7]">Failed to load panel status</h2>
+        <p className="mt-1 text-sm text-[#8892A0]">{error.message}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <PanelHeroCard status={status} />
+        </div>
+        <div className="grid grid-cols-2 gap-3 lg:col-span-1">
+          <StatCard
+            title="Total Nodes"
+            value={status?.nodes.total ?? '—'}
+            description="Registered agents"
+            icon={<Server className="h-4 w-4" />}
+          />
+          <StatCard
+            title="Online"
+            value={status?.nodes.online ?? '—'}
+            description="Active agents"
+            icon={<CheckCircle2 className="h-4 w-4 text-emerald-400" />}
+          />
+          <StatCard
+            title="Offline"
+            value={status?.nodes.offline ?? '—'}
+            description="Disconnected"
+            icon={<XCircle className="h-4 w-4 text-rose-400" />}
+          />
+          <StatCard
+            title="Pending"
+            value={status?.nodes.pending ?? '—'}
+            description="Awaiting install"
+            icon={<Clock className="h-4 w-4 text-amber-400" />}
+          />
+        </div>
+      </section>
+
+      <section>
+        <PanelProbeCard status={status} />
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#8892A0] sm:text-sm">Signal Layer</p>
+            <h3 className="text-base font-medium text-[#C5C6C7] sm:text-lg">Traffic and historic telemetry</h3>
+          </div>
+          <p className="text-right text-xs text-[#8892A0]/70 sm:text-sm">
+            Real-time WebSocket throughput from the panel.
+          </p>
+        </div>
+        <TrafficCharts
+          sent={status?.network.sent ?? 0}
+          received={status?.network.received ?? 0}
+          updatedAt={lastUpdatedAt}
+        />
+      </section>
+    </div>
+  )
+}
+
+function HomeSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
+          <Skeleton className="h-64 w-full rounded-xl" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 lg:col-span-1">
+          <Skeleton className="h-full min-h-[120px] w-full rounded-xl" />
+          <Skeleton className="h-full min-h-[120px] w-full rounded-xl" />
+          <Skeleton className="h-full min-h-[120px] w-full rounded-xl" />
+          <Skeleton className="h-full min-h-[120px] w-full rounded-xl" />
+        </div>
+      </div>
+      <Skeleton className="h-80 w-full rounded-xl" />
+      <Skeleton className="h-40 w-full rounded-xl" />
+    </div>
+  )
 }
