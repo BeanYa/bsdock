@@ -120,6 +120,10 @@ func main() {
 	frontendWS := api.NewFrontendWSHandler(hub, cfg)
 	frontendWS.Register(r)
 
+	// Logs WebSocket for streaming runtime/request logs
+	logsWS := api.NewLogsWSHandler(cfg, logHub)
+	logsWS.Register(r)
+
 	// API routes with auth
 	apiRouter := r.PathPrefix("/api/v1").Subrouter()
 	apiRouter.Use(api.AuthMiddleware(cfg))
