@@ -214,7 +214,7 @@ function NodesPage() {
         </Dialog>
       </PageHeader>
 
-      <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] bg-[rgba(20,28,45,0.55)] p-3 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)] sm:flex-row">
+      <div className="glass flex flex-col gap-3 p-3 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8B95A8]" />
           <Input
@@ -243,7 +243,7 @@ function NodesPage() {
           Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="group relative flex flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-[rgba(20,28,45,0.55)] p-4 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)]"
+              className="glass relative flex flex-col p-4"
             >
               <div className="absolute left-0 right-0 top-0 h-[3px] bg-[#8B95A8]/50" aria-hidden="true" />
               <Skeleton className="h-5 w-3/4 bg-[rgba(8,10,15,0.45)]" />

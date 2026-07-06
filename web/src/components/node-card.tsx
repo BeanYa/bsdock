@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Eye, MoreHorizontal, RotateCcw } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import { GlassCard } from '@/components/glass-card'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -131,14 +131,7 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
   const ringSize = useIsBelowSm() ? 'sm' : 'md'
 
   return (
-    <Card
-      data-testid="node-card"
-      className={cn(
-        'group relative flex flex-col overflow-hidden rounded-xl border-white/[0.08] bg-[rgba(20,28,45,0.55)] p-4 backdrop-blur-xl',
-        'shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)]',
-        'transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-[rgba(0,240,255,0.35)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_12px_40px_rgba(0,240,255,0.08)]'
-      )}
-    >
+    <GlassCard className="group flex flex-col p-4">
       <div
         className={cn(
           'absolute left-0 right-0 top-0 h-[3px] transition-opacity',
@@ -155,7 +148,7 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
         className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00F0FF]"
       />
 
-      <div className="relative z-10 pointer-events-none">
+      <div data-testid="node-card" className="relative z-10 pointer-events-none">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[#8B95A8]">
@@ -251,6 +244,6 @@ export function NodeCard({ node, onInstallCommand, onReset, onRotateToken }: Nod
           )}
         </div>
       </div>
-    </Card>
+    </GlassCard>
   )
 }
