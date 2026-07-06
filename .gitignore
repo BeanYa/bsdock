@@ -12,3 +12,5 @@ web/test-results/
 *.exe
 .tmp/
 .superpowers/sdd/
+
+.worktrees/
