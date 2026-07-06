@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -19,8 +21,10 @@ import (
 	"github.com/bsdock/panel/internal/auth"
 	"github.com/bsdock/panel/internal/config"
 	"github.com/bsdock/panel/internal/db"
+	panellog "github.com/bsdock/panel/internal/log"
 	"github.com/bsdock/panel/internal/node"
 	wshub "github.com/bsdock/panel/internal/websocket"
+	rotlog "github.com/bsdock/pkg/rotlog"
 )
 
 // resolveAgentBinDir finds the directory containing agent binaries.
@@ -47,6 +51,22 @@ func resolveAgentBinDir() string {
 }
 
 func main() {
+	logCloser, requestLogger, runtimeWriter, err := setupLogging()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warning: falling back to stderr logging: %v\n", err)
+		requestLogger = log.New(os.Stderr, "[request] ", log.LstdFlags)
+	} else {
+		defer logCloser.Close()
+	}
+	log.Printf("panel starting")
+
+	logHub := panellog.NewHub()
+	if runtimeWriter != nil {
+		log.SetOutput(io.MultiWriter(runtimeWriter, &sourceWriter{hub: logHub, source: panellog.SourceRuntime}))
+	} else {
+		log.SetOutput(&sourceWriter{hub: logHub, source: panellog.SourceRuntime})
+	}
+
 	cfg, err := config.Load("")
 	if err != nil {
 		log.Fatalf("load config: %v", err)
@@ -88,6 +108,7 @@ func main() {
 	api.StartHeartbeatMonitor(nodeSvc, queries, hub, cfg.Agent)
 
 	r := mux.NewRouter()
+	r.Use(api.RequestLoggingMiddleware(requestLogger, logHub))
 
 	// Agent endpoints (public)
 	agentWS := api.NewAgentWSHandler(nodeSvc, queries, cfg, hub)
@@ -146,9 +167,59 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
+	log.Printf("panel shutting down")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatalf("shutdown: %v", err)
 	}
+	log.Printf("panel stopped")
+}
+
+func setupLogging() (io.Closer, *log.Logger, *rotlog.RotatingFileWriter, error) {
+	exe, err := os.Executable()
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("determine executable path: %w", err)
+	}
+	logDir := filepath.Dir(exe)
+
+	runtimePath := filepath.Join(logDir, "panel.log")
+	runtimeWriter, err := rotlog.NewRotatingFileWriter(runtimePath, 2*1024*1024)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("open runtime log: %w", err)
+	}
+
+	requestPath := filepath.Join(logDir, "panel-requests.log")
+	requestWriter, err := rotlog.NewRotatingFileWriter(requestPath, 10*1024*1024)
+	if err != nil {
+		_ = runtimeWriter.Close()
+		return nil, nil, nil, fmt.Errorf("open request log: %w", err)
+	}
+
+	requestLogger := log.New(requestWriter, "[request] ", log.LstdFlags)
+
+	return &multiCloser{closers: []io.Closer{runtimeWriter, requestWriter}}, requestLogger, runtimeWriter, nil
+}
+
+type sourceWriter struct {
+	hub    *panellog.Hub
+	source panellog.LogSource
+}
+
+func (s *sourceWriter) Write(p []byte) (int, error) {
+	return s.hub.Write(s.source, p)
+}
+
+type multiCloser struct {
+	closers []io.Closer
+}
+
+func (m *multiCloser) Close() error {
+	var firstErr error
+	for _, c := range m.closers {
+		if err := c.Close(); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	return firstErr
 }
