@@ -16,7 +16,7 @@ export function InstallCommandDisplay({ installCommand, loading, onGenerate }: I
     <div className="space-y-4">
       {!installCommand ? (
         <>
-          <p className="text-sm text-[#8892A0]">
+          <p className="text-sm text-muted-foreground">
             Install command is not stored for security. Generate a new one to register or reset this node.
           </p>
           <Button
@@ -74,7 +74,7 @@ export function InstallCommandCard(props: InstallCommandCardProps) {
   return (
     <GlassCard>
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center justify-between text-xs font-medium uppercase tracking-wider text-[#8892A0]">
+        <CardTitle className="flex items-center justify-between text-xs font-medium uppercase tracking-wider text-muted-foreground">
           <span>Install Command</span>
           {props.installCommand && (
             <Button
@@ -82,7 +82,7 @@ export function InstallCommandCard(props: InstallCommandCardProps) {
               size="icon"
               aria-label="Copy"
               onClick={handleCopy}
-              className="h-7 w-7 border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-2 text-[#E8EBF0] hover:border-[#00F0FF] hover:bg-[rgba(0,240,255,0.10)] hover:text-[#00F0FF]"
+              className="glass h-7 w-7 px-2 text-[#E8EBF0] hover:border-[#00F0FF] hover:bg-[rgba(0,240,255,0.10)] hover:text-[#00F0FF]"
             >
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </Button>
