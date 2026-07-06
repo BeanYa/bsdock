@@ -1,8 +1,10 @@
 package api
 
 import (
+	"bufio"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"time"
 
@@ -31,6 +33,25 @@ func (r *responseRecorder) Write(p []byte) (int, error) {
 	n, err := r.ResponseWriter.Write(p)
 	r.bytes += int64(n)
 	return n, err
+}
+
+// Hijack delegates to the underlying ResponseWriter if it implements
+// http.Hijacker. This is required for WebSocket upgrades to work through
+// the request logging middleware.
+func (r *responseRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	h, ok := r.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, fmt.Errorf("response does not implement http.Hijacker")
+	}
+	return h.Hijack()
+}
+
+// Flush delegates to the underlying ResponseWriter if it implements
+// http.Flusher. This allows streaming responses to work correctly.
+func (r *responseRecorder) Flush() {
+	if f, ok := r.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
 }
 
 // RequestLoggingMiddleware returns an HTTP middleware that logs each request
