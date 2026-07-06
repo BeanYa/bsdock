@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Check, Copy, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CopyButton } from '@/components/copy-button'
+import { GlassCard } from '@/components/glass-card'
 
 interface InstallCommandDisplayProps {
   installCommand: string
@@ -21,7 +22,7 @@ export function InstallCommandDisplay({ installCommand, loading, onGenerate }: I
           <Button
             onClick={onGenerate}
             disabled={loading}
-            className="w-full border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] hover:border-[#00F0FF] hover:bg-[rgba(0,240,255,0.10)] hover:text-[#00F0FF] sm:w-auto"
+            className="w-full bg-[#00F0FF] text-[#080A0F] hover:bg-[#00F0FF]/90 sm:w-auto"
           >
             <RotateCcw className="mr-2 h-4 w-4" />
             {loading ? 'Generating...' : 'Generate Install Command'}
@@ -41,14 +42,13 @@ export function InstallCommandDisplay({ installCommand, loading, onGenerate }: I
           <div className="flex flex-col gap-2 sm:flex-row">
             <CopyButton
               text={installCommand}
-              className="flex-1 border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] hover:border-[#00F0FF] hover:bg-[rgba(0,240,255,0.10)] hover:text-[#00F0FF]"
+              className="glass flex-1 text-[#E8EBF0] hover:border-[#00F0FF] hover:bg-[rgba(0,240,255,0.10)] hover:text-[#00F0FF]"
             />
             <Button
-              variant="outline"
               size="sm"
               onClick={onGenerate}
               disabled={loading}
-              className="flex-1 border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] hover:border-[#00F0FF] hover:bg-[rgba(0,240,255,0.10)] hover:text-[#00F0FF]"
+              className="glass flex-1 text-[#E8EBF0] hover:border-[#00F0FF] hover:bg-[rgba(0,240,255,0.10)] hover:text-[#00F0FF]"
             >
               <RotateCcw className="mr-2 h-4 w-4" />
               {loading ? 'Generating...' : 'Regenerate'}
@@ -72,7 +72,7 @@ export function InstallCommandCard(props: InstallCommandCardProps) {
   }
 
   return (
-    <Card className="border-white/[0.08] bg-[rgba(20,28,45,0.55)] backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)]">
+    <GlassCard>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between text-xs font-medium uppercase tracking-wider text-[#8892A0]">
           <span>Install Command</span>
@@ -92,6 +92,6 @@ export function InstallCommandCard(props: InstallCommandCardProps) {
       <CardContent>
         <InstallCommandDisplay {...props} />
       </CardContent>
-    </Card>
+    </GlassCard>
   )
 }
