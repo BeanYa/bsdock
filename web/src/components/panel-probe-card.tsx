@@ -27,7 +27,7 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
   const diskPercent = percent(status?.disk.used, status?.disk.total)
 
   return (
-    <Card className="relative overflow-hidden border-white/[0.08] bg-[rgba(20,28,45,0.55)] backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)]">
+    <Card className="glass relative overflow-hidden">
       <CardContent className="space-y-4 p-4 sm:p-5">
         <div className="flex items-start justify-between">
           <div>

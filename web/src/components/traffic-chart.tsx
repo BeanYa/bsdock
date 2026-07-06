@@ -230,7 +230,7 @@ export function TrafficCharts({ sent, received, updatedAt, maxPoints = 30 }: Tra
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       {cards.map((card) => (
-        <Card key={card.title} className="relative overflow-hidden border-white/[0.08] bg-[rgba(20,28,45,0.55)] backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.35)]">
+        <Card key={card.title} className="glass relative overflow-hidden">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
