@@ -11,8 +11,8 @@ import (
 	"syscall"
 
 	"github.com/bsdock/agent/internal/config"
-	rotlog "github.com/bsdock/agent/internal/log"
 	"github.com/bsdock/agent/internal/transport"
+	rotlog "github.com/bsdock/pkg/rotlog"
 )
 
 func main() {

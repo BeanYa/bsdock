@@ -1,6 +1,7 @@
 use (
 	./panel
 	./agent
+	./pkg
 	./web
 )
 

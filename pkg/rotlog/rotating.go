@@ -1,4 +1,4 @@
-package log
+package rotlog
 
 import (
 	"fmt"
@@ -94,7 +94,6 @@ func (w *RotatingFileWriter) rotateLocked() error {
 	oldPath := w.path + ".old"
 	_ = os.Remove(oldPath)
 	if err := os.Rename(w.path, oldPath); err != nil {
-		// Attempt to reopen the original file so writes can continue.
 		_ = w.reopenLocked()
 		return fmt.Errorf("rotate log file: %w", err)
 	}

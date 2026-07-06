@@ -40,6 +40,7 @@ func (c *Client) runHTTP(ctx context.Context, info *collector.SystemInfo) error 
 
 func (c *Client) post(ctx context.Context, endpoint string, body interface{}) error {
 	b := jsonBytes(body)
+	log.Printf("agent http request: POST %s", endpoint)
 	req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(b))
 	if err != nil {
 		log.Printf("agent http request error: %v", err)
@@ -57,6 +58,6 @@ func (c *Client) post(ctx context.Context, endpoint string, body interface{}) er
 		log.Printf("agent http response error: %v", err)
 		return err
 	}
-	log.Printf("agent report sent via http")
+	log.Printf("agent http response: POST %s status=%d", endpoint, resp.StatusCode)
 	return nil
 }

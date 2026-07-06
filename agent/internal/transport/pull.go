@@ -39,15 +39,16 @@ func (c *Client) runPull(ctx context.Context, info *collector.SystemInfo) error 
 // returns the requested next-report interval. The response body is closed via
 // defer before the function returns.
 func (c *Client) pollOnce(req *http.Request, connected *bool) time.Duration {
+	log.Printf("agent pull request: POST %s", req.URL.String())
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Printf("agent poll error: %v", err)
+		log.Printf("agent pull error: %v", err)
 		return 10 * time.Second
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("agent poll unexpected status: %d", resp.StatusCode)
+		log.Printf("agent pull unexpected status: %d", resp.StatusCode)
 		return 10 * time.Second
 	}
 
@@ -63,7 +64,7 @@ func (c *Client) pollOnce(req *http.Request, connected *bool) time.Duration {
 		log.Printf("agent connected to panel via pull: %s", c.cfg.PanelURL)
 		*connected = true
 	}
-	log.Printf("agent poll reported, next in %ds", ack.NextReportSeconds)
+	log.Printf("agent pull response: POST %s status=%d next=%ds", req.URL.String(), resp.StatusCode, ack.NextReportSeconds)
 
 	interval := time.Duration(ack.NextReportSeconds) * time.Second
 	if interval < 5*time.Second {

@@ -1,4 +1,4 @@
-package log
+package rotlog
 
 import (
 	"fmt"
@@ -35,14 +35,12 @@ func TestRotatingFileWriter_WritesAndRotates(t *testing.T) {
 	}
 
 	line := "test log line\n"
-	// Fill the first file without exceeding the limit.
 	for i := 0; i < 3; i++ {
 		if _, err := w.Write([]byte(line)); err != nil {
 			t.Fatalf("write failed: %v", err)
 		}
 	}
 
-	// This write pushes the file over maxSize and triggers rotation.
 	if _, err := w.Write([]byte(strings.Repeat("x", int(maxSize)))); err != nil {
 		t.Fatalf("write that triggers rotation failed: %v", err)
 	}
