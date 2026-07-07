@@ -10,6 +10,14 @@ interface InstallCommandDisplayProps {
 }
 
 export function InstallCommandDisplay({ installCommand, loading, onGenerate }: InstallCommandDisplayProps) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(installCommand)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   return (
     <div className="space-y-4">
       {!installCommand ? (
@@ -41,11 +49,11 @@ export function InstallCommandDisplay({ installCommand, loading, onGenerate }: I
           <div className="flex flex-col gap-2 sm:flex-row">
             <button
               type="button"
-              onClick={() => navigator.clipboard.writeText(installCommand)}
+              onClick={handleCopy}
               className="command-surface inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-white/[0.08] px-3 py-2 text-sm font-medium text-foreground opacity-100 hover:opacity-90"
             >
-              <Copy className="h-4 w-4" />
-              Copy
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? 'Copied' : 'Copy'}
             </button>
             <button
               type="button"

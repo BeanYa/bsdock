@@ -13,7 +13,7 @@ import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
 import { InfoCard } from '@/components/info-card'
 import { ResourceRing } from '@/components/resource-ring'
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 
 export const Route = createFileRoute('/nodes/$nodeId')({
   component: NodeDetailPage,
@@ -77,6 +77,20 @@ function NodeDetailPage() {
   const { toast } = useToast()
   const [installCommand, setInstallCommand] = useState('')
   const [rotating, setRotating] = useState(false)
+  const reduceMotion = useReducedMotion()
+
+  const sectionMotion = (delay: number) => (
+    reduceMotion
+      ? {
+          initial: false,
+          animate: { opacity: 1 },
+        }
+      : {
+          initial: { opacity: 0, y: 20 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.5, delay },
+        }
+  )
 
   const handleRotateToken = async () => {
     setRotating(true)
@@ -161,11 +175,7 @@ function NodeDetailPage() {
 
   return (
     <div className="space-y-6">
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-      >
+      <motion.section {...sectionMotion(0.1)}>
         <PageHeader title={node.name} description="Node details and system information">
           <Link
             to="/nodes"
@@ -178,9 +188,7 @@ function NodeDetailPage() {
       </motion.section>
 
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+        {...sectionMotion(0.2)}
         className="command-surface relative overflow-hidden rounded-xl border border-white/[0.08] p-4 sm:p-5"
       >
         <div className={cn('absolute left-0 right-0 top-0 h-1', getStatusColorClasses(node.status).bg)} aria-hidden="true" />
@@ -344,11 +352,7 @@ function NodeDetailPage() {
         </div>
       </motion.section>
 
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-      >
+      <motion.section {...sectionMotion(0.3)}>
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Hardware</h2>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <InfoCard title="Hostname" value={info.hostname != null ? String(info.hostname) : undefined} />
@@ -358,11 +362,7 @@ function NodeDetailPage() {
         </div>
       </motion.section>
 
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-      >
+      <motion.section {...sectionMotion(0.4)}>
         <InstallCommandCard
           installCommand={installCommand}
           loading={rotating}
