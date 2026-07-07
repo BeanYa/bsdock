@@ -30,7 +30,7 @@ function NavLinks({ collapsed, onClick }: { collapsed?: boolean; onClick?: () =>
             to={item.to}
             onClick={onClick}
             className={cn(
-              'group relative flex min-h-11 items-center gap-3 overflow-hidden rounded-lg px-3 text-sm font-medium transition-all duration-200',
+              'group relative flex min-h-11 items-center gap-3 overflow-hidden rounded-lg px-3 text-sm font-medium',
               active
                 ? 'bg-[rgba(5,16,28,0.88)] text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_16px_36px_rgba(2,12,26,0.28)]'
                 : 'text-slate-300 hover:bg-white/[0.05] hover:text-foreground',
@@ -41,13 +41,13 @@ function NavLinks({ collapsed, onClick }: { collapsed?: boolean; onClick?: () =>
             <span
               aria-hidden="true"
               className={cn(
-                'absolute bottom-2 left-0 top-2 w-px rounded-full bg-transparent transition-colors',
+                'absolute bottom-2 left-0 top-2 w-px rounded-full bg-transparent',
                 active && 'bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.85)]'
               )}
             />
             <span
               className={cn(
-                'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-transparent bg-white/[0.02] text-slate-400 transition-colors',
+                'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-transparent bg-white/[0.02] text-slate-400',
                 active && 'border-cyan-400/20 bg-cyan-400/10 text-cyan-200',
                 !active && 'group-hover:border-white/10 group-hover:text-foreground'
               )}
@@ -111,7 +111,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       <aside
         data-testid="desktop-sidebar"
         className={cn(
-          'command-surface fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-white/10 backdrop-blur-xl transition-[width] duration-300 ease-out lg:flex',
+          'command-surface fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-white/10 backdrop-blur-xl lg:flex',
           collapsed ? 'lg:w-20' : 'lg:w-72'
         )}
       >

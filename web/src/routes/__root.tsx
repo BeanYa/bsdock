@@ -50,7 +50,7 @@ function RootComponent() {
       />
       <div
         className={cn(
-          'flex min-h-screen flex-col transition-[padding] duration-300 ease-out',
+          'flex min-h-screen flex-col',
           collapsed ? 'lg:pl-20' : 'lg:pl-72'
         )}
       >
