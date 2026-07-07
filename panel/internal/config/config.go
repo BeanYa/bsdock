@@ -36,7 +36,6 @@ type Agent struct {
 	AllowedModes            []string `yaml:"allowed_modes"`
 	DefaultMode             string   `yaml:"default_mode"`
 	HeartbeatTimeoutSeconds int      `yaml:"heartbeat_timeout_seconds"`
-	InstallTokenExpireHours int      `yaml:"install_token_expire_hours"`
 }
 
 type Log struct {
@@ -45,15 +44,14 @@ type Log struct {
 
 func Load(path string) (*Config, error) {
 	cfg := &Config{
-		Mode: "master",
-		Port: "8080",
+		Mode:     "master",
+		Port:     "8080",
 		Database: Database{Path: "./panel.db"},
 		JWT:      JWT{ExpireHours: 24},
 		Agent: Agent{
 			AllowedModes:            []string{"websocket", "http", "pull"},
 			DefaultMode:             "auto",
 			HeartbeatTimeoutSeconds: 60,
-			InstallTokenExpireHours: 24,
 		},
 		Log: Log{Level: "info"},
 	}

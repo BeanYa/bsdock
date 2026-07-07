@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getToken } from '@/lib/auth'
 
 export type LogSource = 'runtime' | 'request'
@@ -31,7 +31,6 @@ export function useLogs(source: LogSource) {
   const [entries, setEntries] = useState<LogEntry[]>([])
   const [connected, setConnected] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-  const wsRef = useRef<WebSocket | null>(null)
 
   useEffect(() => {
     setEntries([])
@@ -39,13 +38,13 @@ export function useLogs(source: LogSource) {
 
     const token = getToken()
     if (!token) {
+      setConnected(false)
       setError(new Error('未登录'))
       return
     }
 
-    const url = `${getWSBaseURL()}/ws/logs?token=${encodeURIComponent(token)}`
+    const url = `${getWSBaseURL()}/ws/logs?source=${encodeURIComponent(source)}&token=${encodeURIComponent(token)}`
     const ws = new WebSocket(url)
-    wsRef.current = ws
 
     ws.onopen = () => {
       setConnected(true)
@@ -65,12 +64,13 @@ export function useLogs(source: LogSource) {
         const data = JSON.parse(event.data) as WSMessage
         if (data.type === 'snapshot') {
           setEntries(data.entries)
-        } else {
-          setEntries((prev) => {
-            const next = [...prev, data]
-            return next.length > 200 ? next.slice(next.length - 200) : next
-          })
+          return
         }
+
+        setEntries((prev) => {
+          const next = [...prev, data]
+          return next.length > 200 ? next.slice(next.length - 200) : next
+        })
       } catch (err) {
         setError(err instanceof Error ? err : new Error(String(err)))
       }
@@ -81,12 +81,5 @@ export function useLogs(source: LogSource) {
     }
   }, [source])
 
-  const switchSource = (newSource: LogSource) => {
-    const ws = wsRef.current
-    if (ws?.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ action: 'subscribe', source: newSource }))
-    }
-  }
-
-  return { entries, connected, error, switchSource }
+  return { entries, connected, error }
 }

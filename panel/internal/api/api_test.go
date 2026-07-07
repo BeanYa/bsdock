@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -28,6 +29,17 @@ func setupAuthTest(t *testing.T) (*db.Queries, *config.Config, *sql.DB) {
 	queries := db.New(sqlDB)
 	cfg := &config.Config{JWT: config.JWT{Secret: "test-secret", ExpireHours: 1}}
 	return queries, cfg, sqlDB
+}
+
+func captureStandardLog(t *testing.T) *bytes.Buffer {
+	t.Helper()
+	var buf bytes.Buffer
+	original := log.Writer()
+	log.SetOutput(&buf)
+	t.Cleanup(func() { log.SetOutput(original) })
+	t.Cleanup(func() { log.SetFlags(log.LstdFlags) })
+	log.SetFlags(0)
+	return &buf
 }
 
 func TestAuthMiddlewareAllowsPublicPaths(t *testing.T) {
@@ -121,6 +133,75 @@ func TestAuthHandlerLoginSuccess(t *testing.T) {
 	}
 	if resp.Token == "" {
 		t.Fatal("expected token")
+	}
+}
+
+func TestAuthHandlerLoginWritesRuntimeLog(t *testing.T) {
+	logs := captureStandardLog(t)
+	queries, cfg, _ := setupAuthTest(t)
+	hash, _ := auth.HashPassword("admin123")
+	_, err := queries.CreateUser(context.Background(), db.CreateUserParams{
+		Username:     "admin",
+		PasswordHash: hash,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	h := NewAuthHandler(queries, cfg)
+
+	body := []byte(`{"username":"admin","password":"admin123"}`)
+	req := httptest.NewRequest("POST", "/api/v1/login", bytes.NewReader(body))
+	req.RemoteAddr = "192.0.2.10:12345"
+	req.Header.Set("User-Agent", "browser-test")
+	req.Header.Set("Origin", "https://panel.local")
+	rec := httptest.NewRecorder()
+	h.Login(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+	line := logs.String()
+	for _, want := range []string{
+		"auth login success",
+		`username="admin"`,
+		`remote="192.0.2.10"`,
+		`origin="https://panel.local"`,
+		`user_agent="browser-test"`,
+	} {
+		if !strings.Contains(line, want) {
+			t.Fatalf("login log missing %q: %s", want, line)
+		}
+	}
+}
+
+func TestAuthHandlerLoginFailureWritesRuntimeLog(t *testing.T) {
+	logs := captureStandardLog(t)
+	queries, cfg, _ := setupAuthTest(t)
+	hash, _ := auth.HashPassword("admin123")
+	_, err := queries.CreateUser(context.Background(), db.CreateUserParams{
+		Username:     "admin",
+		PasswordHash: hash,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	h := NewAuthHandler(queries, cfg)
+
+	body := []byte(`{"username":"admin","password":"wrong"}`)
+	req := httptest.NewRequest("POST", "/api/v1/login", bytes.NewReader(body))
+	req.RemoteAddr = "192.0.2.10:12345"
+	rec := httptest.NewRecorder()
+	h.Login(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+	line := logs.String()
+	if !strings.Contains(line, "auth login failed") || !strings.Contains(line, `username="admin"`) || !strings.Contains(line, `reason="bad_password"`) {
+		t.Fatalf("expected failed login log, got %s", line)
+	}
+	if strings.Contains(line, "wrong") {
+		t.Fatalf("login log should not contain password: %s", line)
 	}
 }
 

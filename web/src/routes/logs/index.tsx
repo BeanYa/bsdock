@@ -22,12 +22,7 @@ function LogsPage() {
   }
 
   const [source, setSource] = useState<LogSource>('runtime')
-  const { entries, connected, error, switchSource } = useLogs(source)
-
-  const handleSwitch = (value: LogSource) => {
-    setSource(value)
-    switchSource(value)
-  }
+  const { entries, connected, error } = useLogs(source)
 
   return (
     <div className="flex h-[calc(100vh-7rem)] flex-col gap-4">
@@ -38,7 +33,7 @@ function LogsPage() {
               key={s.value}
               variant={source === s.value ? 'default' : 'outline'}
               size="sm"
-              onClick={() => handleSwitch(s.value)}
+              onClick={() => setSource(s.value)}
               className={cn(
                 source === s.value
                   ? 'bg-[#00F0FF] text-[#080A0F] hover:bg-[#00F0FF]/90'

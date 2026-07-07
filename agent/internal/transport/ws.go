@@ -49,7 +49,12 @@ func (c *Client) runWebSocket(ctx context.Context, info *collector.SystemInfo) e
 			log.Printf("agent websocket disconnecting: %v", ctx.Err())
 			return ctx.Err()
 		case <-ticker.C:
-			if err := ws.WriteJSON(c.buildHeartbeat()); err != nil {
+			latest, err := collectSystemInfo()
+			if err != nil {
+				log.Printf("agent websocket collect error: %v", err)
+				latest = info
+			}
+			if err := ws.WriteJSON(c.buildHeartbeat(latest)); err != nil {
 				log.Printf("agent websocket metrics error: %v", err)
 				return err
 			}

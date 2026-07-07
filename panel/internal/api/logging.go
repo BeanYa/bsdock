@@ -6,6 +6,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	panellog "github.com/bsdock/panel/internal/log"
@@ -54,6 +56,29 @@ func (r *responseRecorder) Flush() {
 	}
 }
 
+func quoteLogValue(value string) string {
+	return strconv.Quote(strings.TrimSpace(value))
+}
+
+func clientIP(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err == nil {
+		return host
+	}
+	return r.RemoteAddr
+}
+
+func requestSourceFields(r *http.Request) string {
+	return fmt.Sprintf(
+		"remote=%s forwarded_for=%s origin=%s referer=%s user_agent=%s",
+		quoteLogValue(clientIP(r)),
+		quoteLogValue(r.Header.Get("X-Forwarded-For")),
+		quoteLogValue(r.Header.Get("Origin")),
+		quoteLogValue(r.Header.Get("Referer")),
+		quoteLogValue(r.UserAgent()),
+	)
+}
+
 // RequestLoggingMiddleware returns an HTTP middleware that logs each request
 // and response using the provided logger and log hub.
 func RequestLoggingMiddleware(logger *log.Logger, logHub *panellog.Hub) func(http.Handler) http.Handler {
@@ -62,7 +87,15 @@ func RequestLoggingMiddleware(logger *log.Logger, logHub *panellog.Hub) func(htt
 			start := time.Now()
 			rr := &responseRecorder{ResponseWriter: w}
 			next.ServeHTTP(rr, r)
-			line := fmt.Sprintf("%s %s %s %d %d %s", r.Method, r.URL.RequestURI(), r.RemoteAddr, rr.status, rr.bytes, time.Since(start))
+			line := fmt.Sprintf(
+				"request method=%s path=%s status=%d bytes=%d duration=%s %s",
+				quoteLogValue(r.Method),
+				quoteLogValue(r.URL.RequestURI()),
+				rr.status,
+				rr.bytes,
+				time.Since(start),
+				requestSourceFields(r),
+			)
 			logger.Println(line)
 			logHub.Write(panellog.SourceRequest, []byte(line))
 		})

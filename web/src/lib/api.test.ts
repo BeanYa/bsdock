@@ -86,4 +86,28 @@ describe('api', () => {
       expect(result.install_command).toBe('curl --token abc123')
     })
   })
+
+  describe('logPageView', () => {
+    it('posts page view events with auth', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 204,
+        json: async () => ({}),
+      } as Response)
+      globalThis.fetch = fetchMock
+
+      await api.logPageView('/nodes', 'Nodes', '/')
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/v1/events/page-view',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ path: '/nodes', title: 'Nodes', referrer: '/' }),
+          headers: expect.objectContaining({
+            Authorization: 'Bearer test-token',
+          }),
+        })
+      )
+    })
+  })
 })

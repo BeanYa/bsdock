@@ -12,7 +12,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/bsdock/panel/internal/auth"
 	"github.com/bsdock/panel/internal/config"
 	"github.com/bsdock/panel/internal/db"
 	"github.com/bsdock/panel/internal/node"
@@ -89,12 +88,6 @@ func (h *AgentHTTPHandler) handle(w http.ResponseWriter, r *http.Request, isPoll
 		return
 	}
 
-	claims, err := auth.ParseInstallToken(h.cfg.JWT.Secret, payload.Token)
-	if err != nil {
-		http.Error(w, "invalid token", http.StatusUnauthorized)
-		return
-	}
-
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
@@ -107,18 +100,14 @@ func (h *AgentHTTPHandler) handle(w http.ResponseWriter, r *http.Request, isPoll
 	defer tx.Rollback()
 	qtx := h.queries.WithTx(tx)
 
-	nodeRow, err := qtx.GetNode(ctx, claims.NodeID)
+	claims, nodeRow, err := authenticateAgentToken(ctx, qtx, h.cfg.JWT.Secret, payload.Token)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, errInvalidAgentToken) {
 			http.Error(w, "invalid token", http.StatusUnauthorized)
 			return
 		}
-		log.Printf("agent report: get node: %v", err)
+		log.Printf("agent report: authenticate token: %v", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-	if nodeRow.TokenHash != hashToken(payload.Token) {
-		http.Error(w, "invalid token", http.StatusUnauthorized)
 		return
 	}
 

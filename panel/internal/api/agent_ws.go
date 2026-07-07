@@ -12,7 +12,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 
-	"github.com/bsdock/panel/internal/auth"
 	"github.com/bsdock/panel/internal/config"
 	"github.com/bsdock/panel/internal/db"
 	"github.com/bsdock/panel/internal/node"
@@ -45,22 +44,8 @@ func (h *AgentWSHandler) Register(r *mux.Router) {
 
 func (h *AgentWSHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query().Get("token")
-	claims, err := auth.ParseInstallToken(h.cfg.JWT.Secret, token)
+	claims, nodeRow, err := authenticateAgentToken(r.Context(), h.queries, h.cfg.JWT.Secret, token)
 	if err != nil {
-		http.Error(w, "invalid token", http.StatusUnauthorized)
-		return
-	}
-
-	nodeRow, err := h.queries.GetNode(r.Context(), claims.NodeID)
-	if err != nil {
-		http.Error(w, "invalid token", http.StatusUnauthorized)
-		return
-	}
-	if nodeRow.TokenHash != hashToken(token) {
-		http.Error(w, "invalid token", http.StatusUnauthorized)
-		return
-	}
-	if nodeRow.TokenUsed {
 		http.Error(w, "invalid token", http.StatusUnauthorized)
 		return
 	}
@@ -71,9 +56,11 @@ func (h *AgentWSHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
-	if err := h.queries.MarkInstallTokenUsed(r.Context(), claims.NodeID); err != nil {
-		ws.Close()
-		return
+	if !nodeRow.TokenUsed {
+		if err := h.queries.MarkInstallTokenUsed(r.Context(), claims.NodeID); err != nil {
+			ws.Close()
+			return
+		}
 	}
 	if err := h.queries.UpdateNodeStatus(r.Context(), db.UpdateNodeStatusParams{Status: "online", ID: claims.NodeID}); err != nil {
 		ws.Close()

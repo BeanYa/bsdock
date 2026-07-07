@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/bsdock/panel/internal/auth"
@@ -39,11 +40,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.queries.GetUserByUsername(r.Context(), req.Username)
 	if err != nil {
+		log.Printf("auth login failed username=%s reason=%s %s", quoteLogValue(req.Username), quoteLogValue("unknown_user"), requestSourceFields(r))
 		http.Error(w, "invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
 	if !auth.CheckPassword(req.Password, user.PasswordHash) {
+		log.Printf("auth login failed username=%s reason=%s %s", quoteLogValue(req.Username), quoteLogValue("bad_password"), requestSourceFields(r))
 		http.Error(w, "invalid credentials", http.StatusUnauthorized)
 		return
 	}
@@ -54,5 +57,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("auth login success username=%s %s", quoteLogValue(user.Username), requestSourceFields(r))
 	respondJSON(w, loginResponse{Token: token})
 }

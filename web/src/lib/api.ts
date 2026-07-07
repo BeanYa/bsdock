@@ -103,5 +103,19 @@ export const api = {
       method: 'POST',
       headers: { 'X-Panel-URL': getDefaultPanelURL() },
     }),
+  logPageView: async (path: string, title: string, referrer: string) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    const token = getToken()
+    if (!token) return
+    headers.Authorization = `Bearer ${token}`
+
+    await fetch(`${API_BASE}/events/page-view`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ path, title, referrer }),
+    })
+  },
   getPanelStatus: () => request('/panel/status') as Promise<PanelStatus>,
 }

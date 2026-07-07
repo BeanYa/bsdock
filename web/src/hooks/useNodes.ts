@@ -24,6 +24,7 @@ export function useNodes() {
 
     let ws: WebSocket | null = null
     let interval: ReturnType<typeof setInterval> | null = null
+    let disposed = false
 
     const token = getToken()
     if (!token) return
@@ -47,6 +48,7 @@ export function useNodes() {
       }
       ws.onclose = () => {
         ws = null
+        if (disposed) return
         if (!interval) {
           interval = setInterval(() => load(true), 3000)
         }
@@ -59,6 +61,7 @@ export function useNodes() {
     connect()
 
     return () => {
+      disposed = true
       ws?.close()
       if (interval) clearInterval(interval)
     }

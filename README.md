@@ -1,16 +1,16 @@
 # BSDock
 
-BSDock is a Panel-Node management platform. It provides a central web panel for creating nodes, generating install commands, and viewing real-time system information from agents running on each node.
+BSDock is a Panel-Node management platform. It provides a central panel for creating nodes, generating install commands, and viewing real-time system information from agents running on each node.
 
 ## Architecture
 
 ```
-Panel-Frontend (Vite + React)  <--->  Panel-Backend (Go)  <--->  Agent (Go)
+Panel side: Panel-Frontend (web/)  <--->  Panel-Backend (panel/)  <--->  Node side: Agent (agent/)
 ```
 
-- **panel** – Go backend module (`github.com/bsdock/panel`). Serves the API, frontend static files, and agent endpoints.
-- **agent** – Go static binary (`github.com/bsdock/agent`). Collects system info and reports to the panel over WebSocket, HTTP, or pull mode.
-- **web** – Vite + React + TanStack Router + Tailwind CSS + shadcn/ui frontend.
+- **panel** – Panel backend Go module (`github.com/bsdock/panel`). Serves the API, panel frontend static files, and agent endpoints.
+- **web** – Panel frontend source directory. Built with Vite + React + TanStack Router + Tailwind CSS + shadcn/ui; deployed as part of the panel side, not as a separate web side.
+- **agent** – Node-side Go static binary (`github.com/bsdock/agent`). Collects system info and reports to the panel over WebSocket, HTTP, or pull mode.
 
 ## Requirements
 
@@ -42,7 +42,7 @@ admin:
 
 | Command | Description |
 | ------- | ----------- |
-| `bun run dev` | Run panel backend and web dev server |
+| `bun run dev` | Run panel backend and panel frontend dev server |
 | `bun run build` | Build web, panel, and agent binaries |
 | `bun run test` | Run backend and frontend unit tests |
 | `bun run e2e` | Run Playwright E2E tests (requires `bunx playwright install chromium`) |

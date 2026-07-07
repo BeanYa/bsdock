@@ -66,11 +66,13 @@ func main() {
 	} else {
 		log.SetOutput(&sourceWriter{hub: logHub, source: panellog.SourceRuntime})
 	}
+	log.Printf("panel runtime logging initialized")
 
 	cfg, err := config.Load("")
 	if err != nil {
 		log.Fatalf("load config: %v", err)
 	}
+	log.Printf("panel config loaded port=%s database=%q", cfg.Port, cfg.Database.Path)
 
 	startTime := time.Now()
 
@@ -136,6 +138,9 @@ func main() {
 	panelStatusHandler := api.NewPanelStatusHandler(nodeSvc, cfg, hub, startTime)
 	panelStatusHandler.Register(apiRouter)
 
+	frontendEventHandler := api.NewFrontendEventHandler()
+	frontendEventHandler.Register(apiRouter)
+
 	// Install scripts (no auth)
 	r.HandleFunc("/install-agent.sh", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "scripts/install-agent.sh")
@@ -154,6 +159,7 @@ func main() {
 		log.Fatalf("static handler: %v", err)
 	}
 	r.PathPrefix("/").Handler(static)
+	log.Printf("panel routes registered request_logging=true frontend_ws=true logs_ws=true page_events=true")
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,

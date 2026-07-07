@@ -33,9 +33,10 @@
                                                └──────────────────┘
 ```
 
+- 部署视角只有两侧：`Panel` 主控侧包含 Panel-Frontend 与 Panel-Backend；`Node` 节点侧运行 Agent。`web/` 只是 Panel-Frontend 源码目录，不代表独立 web 端。
 - **Panel-Frontend**：Vite + React + TypeScript，由 Panel-Backend 在运行时托管静态产物，或开发时通过 Vite dev server 独立运行。
 - **Panel-Backend**：Go（标准库 net/http）提供 HTTP API、WebSocket 服务、Pull 拉取端点，使用 SQLite 持久化。
-- **Agent**：Go 编译为 linux/amd64 与 linux/arm64 静态二进制，运行在 Node 上，主动向 Panel-Backend 建立连接；支持 WebSocket / HTTP / Pull 三种模式，默认 `auto` 按可用性自动回退。
+- **Agent**：Go 编译为 linux/amd64 与 linux/arm64 静态二进制，运行在 Node 节点侧，主动向 Panel-Backend 建立连接；支持 WebSocket / HTTP / Pull 三种模式，默认 `auto` 按可用性自动回退。
 - **Install Script**：固定脚本 `scripts/install-agent.sh` 托管于 GitHub Raw，通过 `--panel` 与 `--token` 参数接收面板地址和注册令牌。
 
 ## 3. 技术栈
@@ -76,14 +77,14 @@
 ```
 bsdock/
 ├── .github/workflows/          # GitHub Actions：构建与 Release
-├── agent/                      # Go Agent 源码
+├── agent/                      # Node 侧 Go Agent 源码
 │   ├── cmd/agent/main.go
 │   ├── internal/
 │   │   ├── collector/          # 系统信息采集
 │   │   ├── register/           # 注册与 WebSocket 连接
 │   │   └── heartbeat/          # 心跳
 │   └── agent_test.go
-├── panel/                      # Go Panel-Backend 源码
+├── panel/                      # Panel 侧 Go backend 源码
 │   ├── cmd/panel/main.go
 │   ├── internal/
 │   │   ├── api/                # HTTP API handler
@@ -97,7 +98,7 @@ bsdock/
 │   ├── install-agent.sh        # Linux Agent 安装脚本（GitHub Raw 固定地址）
 │   ├── install-panel.sh        # Linux 面板一键部署脚本（systemd + 初始化）
 │   └── install.ps1             # Windows 面板一键部署脚本（可选）
-├── web/                        # Vite + React 前端
+├── web/                        # Panel 侧 Vite + React frontend 源码
 │   ├── src/
 │   │   ├── components/ui/      # shadcn 组件
 │   │   ├── pages/              # Login / Nodes / NodeDetail
@@ -184,15 +185,15 @@ log:
 6. **心跳**：WebSocket 模式下 Agent 每 30 秒发送 `heartbeat` 消息；HTTP/Pull 模式下每次上报即视为心跳；后端超过 60 秒未收到任何模式上报则标记 `offline`。
 7. **重连**：Agent 断线后自动重连，重连间隔 5s/10s/30s 指数退避。
 
-## 7. Agent-Backend 协议
+## 7. Agent-Panel Backend 协议
 
-Agent 与后端支持三种连接模式，默认 `auto` 自动回退：
+Agent 与 Panel-Backend 支持三种连接模式，默认 `auto` 自动回退：
 
 1. **WebSocket 模式**（优先）：Agent 作为 WebSocket 客户端连接 `/api/v1/agent/ws?token=...`，长连接实时推送。
 2. **HTTP 模式**：WebSocket 不可用时，Agent 通过 `POST /api/v1/agent/report` 上报注册与心跳信息。
 3. **Pull 模式**：Agent 无法主动连上主控时（如主控在 CDN/内网后），周期性 `POST /api/v1/agent/poll?token=...`，请求体携带当前系统信息，响应体返回 `ack` 与下次轮询间隔。
 
-### 7.1 WebSocket 消息（Agent -> Backend）
+### 7.1 WebSocket 消息（Agent -> Panel-Backend）
 
 ```json
 {
@@ -218,7 +219,7 @@ Agent 与后端支持三种连接模式，默认 `auto` 自动回退：
 { "type": "heartbeat", "timestamp": "2026-07-04T03:00:00Z" }
 ```
 
-### 7.2 WebSocket 消息（Backend -> Agent）
+### 7.2 WebSocket 消息（Panel-Backend -> Agent）
 
 ```json
 { "type": "ack", "node_id": "uuid", "status": "online" }
@@ -232,7 +233,7 @@ Agent 与后端支持三种连接模式，默认 `auto` 自动回退：
 { "type": "ack", "node_id": "uuid", "status": "online", "next_report_seconds": 30 }
 ```
 
-### 7.4 Backend -> Frontend
+### 7.4 Panel-Backend -> Panel-Frontend
 
 ```json
 {

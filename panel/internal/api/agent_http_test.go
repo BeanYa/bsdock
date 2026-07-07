@@ -10,8 +10,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 
+	"github.com/bsdock/panel/internal/auth"
 	"github.com/bsdock/panel/internal/config"
 	"github.com/bsdock/panel/internal/db"
 	"github.com/bsdock/panel/internal/node"
@@ -34,6 +36,22 @@ func setupAgentHandler(t *testing.T) (*sql.DB, *db.Queries, *config.Config, *nod
 	r := mux.NewRouter()
 	h.Register(r)
 	return sqlDB, queries, cfg, svc, r, hub
+}
+
+func expiredInstallToken(t *testing.T, secret, nodeID string) string {
+	t.Helper()
+	claims := auth.InstallClaims{
+		NodeID: nodeID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now().Add(-2 * time.Hour)),
+		},
+	}
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(secret))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return token
 }
 
 func TestAgentHTTPReport(t *testing.T) {
@@ -187,6 +205,81 @@ func TestAgentReportTokenReuse(t *testing.T) {
 	}
 	if !n.TokenUsed {
 		t.Fatal("expected token to be marked used")
+	}
+}
+
+func TestAgentReportAllowsExpiredTokenAfterInstall(t *testing.T) {
+	_, queries, _, svc, r, _ := setupAgentHandler(t)
+
+	ctx := t.Context()
+	created, _, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	token := expiredInstallToken(t, "secret", created.ID)
+	if _, err := queries.RotateInstallToken(ctx, db.RotateInstallTokenParams{
+		ID:        created.ID,
+		TokenHash: hashToken(token),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := queries.MarkInstallTokenUsed(ctx, created.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	payload := map[string]interface{}{
+		"token":    token,
+		"hostname": "srv-01",
+		"os":       "linux",
+		"arch":     "amd64",
+	}
+	body, _ := json.Marshal(payload)
+	req := httptest.NewRequest("POST", "/api/v1/agent/report", bytes.NewReader(body))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	n, err := svc.Get(created.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n.Status != "online" {
+		t.Fatalf("expected online, got %s", n.Status)
+	}
+}
+
+func TestAgentReportAllowsExpiredTokenBeforeInstall(t *testing.T) {
+	_, queries, _, svc, r, _ := setupAgentHandler(t)
+
+	ctx := t.Context()
+	created, _, err := svc.Create(ctx, "srv-01", "linux", "secret", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	token := expiredInstallToken(t, "secret", created.ID)
+	if _, err := queries.RotateInstallToken(ctx, db.RotateInstallTokenParams{
+		ID:        created.ID,
+		TokenHash: hashToken(token),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	payload := map[string]interface{}{
+		"token":    token,
+		"hostname": "srv-01",
+		"os":       "linux",
+		"arch":     "amd64",
+	}
+	body, _ := json.Marshal(payload)
+	req := httptest.NewRequest("POST", "/api/v1/agent/report", bytes.NewReader(body))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
 	}
 }
 

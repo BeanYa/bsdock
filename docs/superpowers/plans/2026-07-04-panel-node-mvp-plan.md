@@ -4096,7 +4096,7 @@ git commit -m "feat(web): add real-time node updates via websocket and polling f
 - Modify: `web/package.json` (scripts already defined)
 
 **Interfaces:**
-- Consumes: full running stack (Go backend + Vite frontend)
+- Consumes: full running panel stack (Panel-Backend Go service + Panel-Frontend Vite app)
 - Produces: passing E2E test covering login → create node → agent registration → online status
 
 - [ ] **Step 1: Write Playwright config**
@@ -4413,7 +4413,7 @@ Update `AGENTS.md`:
 ## Project overview
 
 BSDock is a Panel-Node management panel with master + SubAgent architecture.
-Monorepo: `panel/` (Go backend), `agent/` (Go agent), `web/` (Vite React frontend).
+Deployment sides: Panel side (`web/` Panel-Frontend + `panel/` Panel-Backend) and Node side (`agent/` Go agent).
 
 ## Build and test commands
 

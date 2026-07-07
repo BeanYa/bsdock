@@ -15,6 +15,8 @@ type Client struct {
 	mode string
 }
 
+var collectSystemInfo = collector.Collect
+
 func NewClient(cfg *config.Config) *Client {
 	mode := cfg.Mode
 	if mode == "" {
@@ -24,7 +26,7 @@ func NewClient(cfg *config.Config) *Client {
 }
 
 func (c *Client) RegisterAndKeepAlive(ctx context.Context) error {
-	info, err := collector.Collect()
+	info, err := collectSystemInfo()
 	if err != nil {
 		return fmt.Errorf("collect: %w", err)
 	}
@@ -101,14 +103,14 @@ func (c *Client) buildReportPayload(info *collector.SystemInfo) map[string]inter
 	}
 }
 
-func (c *Client) buildHeartbeat() map[string]interface{} {
+func (c *Client) buildHeartbeat(info *collector.SystemInfo) map[string]interface{} {
 	return map[string]interface{}{
 		"type":        "metrics",
 		"timestamp":   time.Now().UTC().Format(time.RFC3339),
 		"token":       c.cfg.Token,
-		"cpu_percent": 0.0,
-		"memory_used": 0,
-		"memory_free": 0,
+		"cpu_percent": info.CPUPercent,
+		"memory_used": info.MemoryUsed,
+		"memory_free": info.MemoryFree,
 	}
 }
 

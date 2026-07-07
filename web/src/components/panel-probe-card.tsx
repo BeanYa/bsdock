@@ -26,6 +26,11 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
   const cpuPercent = status?.cpu.percent ?? null
   const memPercent = percent(status?.memory.used, status?.memory.total)
   const diskPercent = percent(status?.disk.used, status?.disk.total)
+  const health = !status
+    ? { label: 'Unknown', className: 'border-white/[0.08] bg-white/[0.05] text-[#8B95A8]', dot: 'bg-[#8B95A8]' }
+    : status.nodes.total === 0 || status.nodes.online > 0
+      ? { label: 'Healthy', className: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400', dot: 'bg-emerald-400' }
+      : { label: 'Degraded', className: 'border-amber-500/30 bg-amber-500/10 text-amber-400', dot: 'bg-amber-400' }
 
   return (
     <GlassCard>
@@ -34,12 +39,12 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-[#8892A0] sm:text-sm">Panel Probe</p>
             <h2 className="text-2xl font-semibold tracking-tight text-[#C5C6C7] sm:text-3xl">
-              {status?.hostname ?? 'localhost'}
+              {status?.hostname ?? '—'}
             </h2>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-400">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            Healthy
+          <div className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${health.className}`}>
+            <span className={`h-2 w-2 rounded-full ${health.dot}`} />
+            {health.label}
           </div>
         </div>
 

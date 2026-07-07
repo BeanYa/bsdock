@@ -5,6 +5,7 @@ PANEL_URL=""
 TOKEN=""
 MODE="auto"
 INSECURE="false"
+INSTANCE_ID=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -12,12 +13,13 @@ while [[ $# -gt 0 ]]; do
     --token) TOKEN="$2"; shift 2 ;;
     --mode) MODE="$2"; shift 2 ;;
     --insecure) INSECURE="true"; shift ;;
+    --instance-id) INSTANCE_ID="$2"; shift 2 ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
 
 if [[ -z "$PANEL_URL" || -z "$TOKEN" ]]; then
-  echo "Usage: $0 --panel <url> --token <token> [--mode auto|websocket|http|pull] [--insecure]"
+  echo "Usage: $0 --panel <url> --token <token> [--instance-id id] [--mode auto|websocket|http|pull] [--insecure]"
   exit 1
 fi
 
@@ -28,7 +30,14 @@ case "$ARCH" in
   *) echo "Unsupported arch: $ARCH"; exit 1 ;;
 esac
 
-INSTANCE_ID=$(printf '%s' "$PANEL_URL" | md5sum | cut -c1-8)
+if [[ -z "$INSTANCE_ID" ]]; then
+  INSTANCE_ID=$(printf '%s' "$PANEL_URL" | sha256sum | cut -c1-16)
+fi
+if [[ ! "$INSTANCE_ID" =~ ^[a-fA-F0-9]{8,64}$ ]]; then
+  echo "Invalid instance id: $INSTANCE_ID" >&2
+  exit 1
+fi
+INSTANCE_ID=$(printf '%s' "$INSTANCE_ID" | tr '[:upper:]' '[:lower:]')
 INSTALL_DIR="/opt/bsdock-agent/${INSTANCE_ID}"
 BIN_NAME="bsdock-agent-linux-${BIN_ARCH}"
 BIN_URL="${PANEL_URL}/static/agent/${BIN_NAME}"

@@ -2,11 +2,10 @@
 
 ## Project overview
 
-BSDock is a Panel-Node management platform with a monorepo layout:
+BSDock is a Panel-Node management platform with two deployment sides:
 
-- `panel/` – Go backend (`github.com/bsdock/panel`)
-- `agent/` – Go agent (`github.com/bsdock/agent`)
-- `web/` – Vite + React + TanStack Router + Tailwind CSS + shadcn/ui frontend
+- Panel side: `web/` is the Panel-Frontend source, and `panel/` is the Panel-Backend Go module (`github.com/bsdock/panel`). Production panel binaries embed the built frontend.
+- Node side: `agent/` is the node-side Go agent (`github.com/bsdock/agent`) for monitoring and proxy/transport work.
 - `go.work` – Go workspace including `panel/`, `agent/`, and `web/`
 - `package.json` – Root bun scripts
 
@@ -56,7 +55,7 @@ BSDock is a Panel-Node management platform with a monorepo layout:
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **bsdock** (1329 symbols, 3115 relationships, 77 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **bsdock** (1618 symbols, 3727 relationships, 94 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 

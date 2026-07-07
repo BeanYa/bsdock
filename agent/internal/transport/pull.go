@@ -11,6 +11,17 @@ import (
 	"github.com/bsdock/agent/internal/collector"
 )
 
+var waitForNextPoll = func(ctx context.Context, interval time.Duration) bool {
+	timer := time.NewTimer(interval)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-timer.C:
+		return true
+	}
+}
+
 func (c *Client) runPull(ctx context.Context, info *collector.SystemInfo) error {
 	endpoint := c.cfg.PanelURL + "/api/v1/agent/poll"
 	connected := false
@@ -22,7 +33,12 @@ func (c *Client) runPull(ctx context.Context, info *collector.SystemInfo) error 
 		default:
 		}
 
-		b := jsonBytes(c.buildReportPayload(info))
+		latest, err := collectSystemInfo()
+		if err != nil {
+			log.Printf("agent pull collect error: %v", err)
+			latest = info
+		}
+		b := jsonBytes(c.buildReportPayload(latest))
 		req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(b))
 		if err != nil {
 			log.Printf("agent pull request error: %v", err)
@@ -31,7 +47,9 @@ func (c *Client) runPull(ctx context.Context, info *collector.SystemInfo) error 
 		req.Header.Set("Content-Type", "application/json")
 
 		interval := c.pollOnce(req, &connected)
-		time.Sleep(interval)
+		if !waitForNextPoll(ctx, interval) {
+			return ctx.Err()
+		}
 	}
 }
 

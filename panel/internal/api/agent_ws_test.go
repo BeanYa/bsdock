@@ -123,7 +123,7 @@ func TestAgentWebSocketInvalidTokenHash(t *testing.T) {
 	}
 }
 
-func TestAgentWebSocketTokenAlreadyUsed(t *testing.T) {
+func TestAgentWebSocketAllowsTokenReuseForInstalledNode(t *testing.T) {
 	sqlDB, _ := db.Open(":memory:")
 	defer sqlDB.Close()
 	queries := db.New(sqlDB)
@@ -157,15 +157,18 @@ func TestAgentWebSocketTokenAlreadyUsed(t *testing.T) {
 	}
 	ws1.Close()
 
-	// Second connection with the same token must be rejected.
+	time.Sleep(100 * time.Millisecond)
+
+	// The installed agent must be able to reconnect with the same token after
+	// a transient disconnect.
 	ws2, resp, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	if err == nil {
-		ws2.Close()
-		t.Fatal("expected second connection to fail")
+	if err != nil {
+		if resp != nil {
+			t.Fatalf("expected second connection to succeed, got status %d: %v", resp.StatusCode, err)
+		}
+		t.Fatalf("expected second connection to succeed: %v", err)
 	}
-	if resp.StatusCode != 401 {
-		t.Fatalf("expected 401, got %d", resp.StatusCode)
-	}
+	ws2.Close()
 }
 
 func TestAgentWS_MetricsUpdatesSystemInfo(t *testing.T) {

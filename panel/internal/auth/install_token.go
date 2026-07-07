@@ -20,12 +20,13 @@ func GenerateInstallToken(secret, nodeID string, expireHours int) (string, error
 		return "", err
 	}
 
+	// Agent tokens are invalidated by rotating the stored token hash, not by
+	// wall-clock expiry. expireHours is kept for existing call sites.
 	claims := InstallClaims{
 		NodeID: nodeID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        hex.EncodeToString(idBytes),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(expireHours) * time.Hour)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ID:       hex.EncodeToString(idBytes),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -38,7 +39,7 @@ func ParseInstallToken(secret, tokenString string) (*InstallClaims, error) {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(secret), nil
-	})
+	}, jwt.WithoutClaimsValidation())
 	if err != nil {
 		return nil, err
 	}

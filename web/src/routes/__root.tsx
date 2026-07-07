@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createRootRoute, Outlet, useRouterState } from '@tanstack/react-router'
 import { AppSidebar } from '@/components/app-sidebar'
 import { AppHeader } from '@/components/app-header'
 import { cn } from '@/lib/utils'
+import { isAuthenticated } from '@/lib/auth'
+import { api } from '@/lib/api'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -11,9 +13,21 @@ export const Route = createRootRoute({
 function RootComponent() {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const lastPathRef = useRef(typeof document !== 'undefined' ? document.referrer : '')
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
   const isLoginPage = pathname === '/login'
+
+  useEffect(() => {
+    const referrer = lastPathRef.current
+    lastPathRef.current = pathname
+    if (isLoginPage || !isAuthenticated()) {
+      return
+    }
+
+    const title = typeof document !== 'undefined' ? document.title : ''
+    void api.logPageView(pathname, title, referrer).catch(() => undefined)
+  }, [isLoginPage, pathname])
 
   if (isLoginPage) {
     return (

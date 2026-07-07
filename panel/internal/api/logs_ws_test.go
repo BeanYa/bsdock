@@ -107,3 +107,97 @@ func TestLogsWSSwitchSource(t *testing.T) {
 		t.Fatalf("expected 1 request entry, got %v", msg["entries"])
 	}
 }
+
+func TestLogsWSConnectsToRequestedSource(t *testing.T) {
+	cfg := &config.Config{JWT: config.JWT{Secret: "secret"}}
+	hub := panellog.NewHub()
+	h := NewLogsWSHandler(cfg, hub)
+
+	token, err := auth.GenerateToken(cfg.JWT.Secret, "admin", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	hub.Write(panellog.SourceRuntime, []byte("runtime line\n"))
+	hub.Write(panellog.SourceRequest, []byte("request line\n"))
+
+	server := httptest.NewServer(h)
+	defer server.Close()
+
+	url := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws/logs?source=request&token=" + token
+	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	var msg map[string]interface{}
+	if err := conn.ReadJSON(&msg); err != nil {
+		t.Fatal(err)
+	}
+	if msg["source"] != string(panellog.SourceRequest) {
+		t.Fatalf("expected request snapshot, got %v", msg["source"])
+	}
+	entries, ok := msg["entries"].([]interface{})
+	if !ok || len(entries) != 1 {
+		t.Fatalf("expected 1 request entry, got %v", msg["entries"])
+	}
+	entry, ok := entries[0].(map[string]interface{})
+	if !ok || !strings.Contains(entry["message"].(string), "request line") {
+		t.Fatalf("expected request log entry, got %v", entries[0])
+	}
+}
+
+func TestLogsWSKeepsIdleConnectionAlive(t *testing.T) {
+	cfg := &config.Config{JWT: config.JWT{Secret: "secret"}}
+	hub := panellog.NewHub()
+	h := NewLogsWSHandler(cfg, hub)
+	h.readTimeout = 120 * time.Millisecond
+	h.pingInterval = 20 * time.Millisecond
+
+	token, err := auth.GenerateToken(cfg.JWT.Secret, "admin", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	server := httptest.NewServer(h)
+	defer server.Close()
+
+	url := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws/logs?token=" + token
+	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	var msg map[string]interface{}
+	if err := conn.ReadJSON(&msg); err != nil {
+		t.Fatal(err)
+	}
+
+	msgCh := make(chan map[string]interface{}, 1)
+	errCh := make(chan error, 1)
+	go func() {
+		var next map[string]interface{}
+		errCh <- conn.ReadJSON(&next)
+		msgCh <- next
+	}()
+
+	time.Sleep(3 * h.readTimeout)
+	hub.Write(panellog.SourceRuntime, []byte("after idle\n"))
+
+	select {
+	case err := <-errCh:
+		if err != nil {
+			t.Fatalf("expected connection to stay alive after idle period: %v", err)
+		}
+		msg = <-msgCh
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for log entry after idle period")
+	}
+	if !strings.Contains(msg["message"].(string), "after idle") {
+		t.Fatalf("expected after idle entry, got %v", msg)
+	}
+}

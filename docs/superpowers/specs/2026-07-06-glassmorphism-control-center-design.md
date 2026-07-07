@@ -2,7 +2,7 @@
 
 ## Brief
 
-BSDock is a Panel-Node management platform. The current web UI already uses a dark console palette, but the visual language remains generic and flat. The goal of this redesign is to establish a cohesive **mission-control / night-operations-center** aesthetic using layered glass panels, ambient light, and signal-colored accents. Every surface should feel like an instrument panel floating in a dark command center.
+BSDock is a Panel-Node management platform. The current panel frontend UI already uses a dark console palette, but the visual language remains generic and flat. The goal of this redesign is to establish a cohesive **mission-control / night-operations-center** aesthetic using layered glass panels, ambient light, and signal-colored accents. Every surface should feel like an instrument panel floating in a dark command center.
 
 Scope covers the entire authenticated frontend surface:
 

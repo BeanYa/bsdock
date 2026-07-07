@@ -6,7 +6,7 @@ import { useNode } from '@/hooks/useNode'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { getStatusColorClasses } from '@/lib/status'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -128,8 +128,8 @@ function NodeDetailPage() {
       <div className="flex min-h-[50vh] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
         <h2 className="text-lg font-medium">Node not found</h2>
         <p className="mt-1 text-sm text-muted-foreground">The requested node does not exist or has been removed.</p>
-        <Link to="/nodes">
-          <Button className="mt-4">Back to Nodes</Button>
+        <Link to="/nodes" className={cn(buttonVariants(), 'mt-4')}>
+          Back to Nodes
         </Link>
       </div>
     )
@@ -152,10 +152,15 @@ function NodeDetailPage() {
         transition={{ duration: 0.5, delay: 0.1 }}
       >
         <PageHeader title={node.name} description="Node details and system information">
-          <Link to="/nodes">
-            <Button variant="outline" size="icon" className="border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] hover:bg-white/[0.08] hover:text-[#E8EBF0]">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
+          <Link
+            to="/nodes"
+            aria-label="Back to Nodes"
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'icon' }),
+              'border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] hover:bg-white/[0.08] hover:text-[#E8EBF0]'
+            )}
+          >
+            <ArrowLeft className="h-4 w-4" />
           </Link>
         </PageHeader>
       </motion.section>

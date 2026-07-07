@@ -16,16 +16,25 @@ import (
 
 // LogsWSHandler upgrades frontend connections and streams log entries.
 type LogsWSHandler struct {
-	cfg      *config.Config
-	hub      *panellog.Hub
-	upgrader websocket.Upgrader
+	cfg          *config.Config
+	hub          *panellog.Hub
+	upgrader     websocket.Upgrader
+	readTimeout  time.Duration
+	pingInterval time.Duration
 }
+
+const (
+	defaultLogsWSReadTimeout  = 60 * time.Second
+	defaultLogsWSPingInterval = 25 * time.Second
+)
 
 // NewLogsWSHandler creates a new LogsWSHandler.
 func NewLogsWSHandler(cfg *config.Config, hub *panellog.Hub) *LogsWSHandler {
 	return &LogsWSHandler{
-		cfg: cfg,
-		hub: hub,
+		cfg:          cfg,
+		hub:          hub,
+		readTimeout:  defaultLogsWSReadTimeout,
+		pingInterval: defaultLogsWSPingInterval,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
 		},
@@ -68,7 +77,16 @@ func (h *LogsWSHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
-	source := panellog.SourceRuntime
+	source := logSourceFromRequest(r)
+	if h.readTimeout > 0 {
+		if err := ws.SetReadDeadline(time.Now().Add(h.readTimeout)); err != nil {
+			log.Printf("logs ws set read deadline: %v", err)
+			return
+		}
+		ws.SetPongHandler(func(string) error {
+			return ws.SetReadDeadline(time.Now().Add(h.readTimeout))
+		})
+	}
 	if err := h.sendSnapshot(ws, source); err != nil {
 		log.Printf("logs ws send snapshot: %v", err)
 		return
@@ -80,11 +98,19 @@ func (h *LogsWSHandler) Handle(w http.ResponseWriter, r *http.Request) {
 
 	switchCh := make(chan panellog.LogSource, 1)
 	doneCh := make(chan struct{})
+	var pingTicker *time.Ticker
+	if h.pingInterval > 0 {
+		pingTicker = time.NewTicker(h.pingInterval)
+		defer pingTicker.Stop()
+	}
+	var pingC <-chan time.Time
+	if pingTicker != nil {
+		pingC = pingTicker.C
+	}
 
 	go func() {
 		defer close(doneCh)
 		for {
-			ws.SetReadDeadline(time.Now().Add(60 * time.Second))
 			_, p, err := ws.ReadMessage()
 			if err != nil {
 				return
@@ -122,10 +148,22 @@ func (h *LogsWSHandler) Handle(w http.ResponseWriter, r *http.Request) {
 				log.Printf("logs ws send snapshot: %v", err)
 				return
 			}
+		case <-pingC:
+			if err := ws.WriteControl(websocket.PingMessage, nil, time.Now().Add(5*time.Second)); err != nil {
+				return
+			}
 		case <-doneCh:
 			return
 		}
 	}
+}
+
+func logSourceFromRequest(r *http.Request) panellog.LogSource {
+	source := panellog.LogSource(r.URL.Query().Get("source"))
+	if source == panellog.SourceRequest {
+		return panellog.SourceRequest
+	}
+	return panellog.SourceRuntime
 }
 
 func (h *LogsWSHandler) sendSnapshot(ws *websocket.Conn, source panellog.LogSource) error {
