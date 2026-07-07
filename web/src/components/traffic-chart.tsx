@@ -228,26 +228,36 @@ export function TrafficCharts({ sent, received, updatedAt, maxPoints = 30 }: Tra
   ]
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-      {cards.map((card) => (
-        <Card key={card.title} className="glass relative overflow-hidden">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+    <Card className="command-surface overflow-hidden rounded-xl border-white/10">
+      <CardContent className="space-y-5 p-4 sm:p-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#8892A0]">Signal Matrix</p>
+            <h3 className="mt-2 text-2xl font-semibold tracking-tight text-[#C5C6C7]">WebSocket throughput</h3>
+          </div>
+          <p className="max-w-sm text-sm leading-6 text-[#8B95A8]">
+            Track outbound, inbound, and aggregate panel traffic in a single command surface.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
+          {cards.map((card) => (
+            <div key={card.title} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
               <div>
-                <p className="text-sm font-medium text-[#8892A0] sm:text-base">{card.title}</p>
-                <p className="mt-1 font-mono text-xl font-semibold text-[#C5C6C7] sm:text-2xl">{card.value}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8892A0]">{card.title}</p>
+                <p className="mt-2 font-mono text-2xl font-semibold text-[#C5C6C7]">{card.value}</p>
+              </div>
+              <div className="mt-4 h-36 w-full" aria-live="polite">
+                <LineChart
+                  data={card.data}
+                  color={card.color}
+                  fillColor={card.fillColor}
+                />
               </div>
             </div>
-            <div className="mt-3 h-36 w-full">
-              <LineChart
-                data={card.data}
-                color={card.color}
-                fillColor={card.fillColor}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   )
 }

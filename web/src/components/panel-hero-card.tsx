@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { CardContent } from '@/components/ui/card'
 import { GlassCard } from '@/components/glass-card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -11,7 +10,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
-import { Activity, RefreshCw, ArrowUpRight, Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Activity, ArrowRight, ArrowUpRight, Binary, Loader2, RefreshCw, ShieldCheck } from 'lucide-react'
 import type { PanelStatus } from '@/lib/api'
 
 interface PanelHeroCardProps {
@@ -35,6 +35,9 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
   const [updating, setUpdating] = useState(false)
   const { toast } = useToast()
   const healthy = (status?.nodes.online ?? 0) > 0 || (status?.nodes.total ?? 0) === 0
+  const shellButtonClassName =
+    'inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-[#E8EBF0] transition-transform motion-reduce:transition-none hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:pointer-events-none disabled:opacity-50'
+  const statusLabel = healthy ? 'Control plane nominal' : 'Control plane degraded'
 
   const handleUpdate = async () => {
     setUpdating(true)
@@ -55,65 +58,76 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
   }
 
   return (
-    <GlassCard>
-      <CardContent className="flex h-full flex-col justify-between p-5 sm:p-6">
-        <div className="flex items-start justify-between">
+    <GlassCard hover={false} className="command-surface command-grid">
+      <CardContent className="relative flex h-full flex-col justify-between gap-6 p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-              B
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-primary/15 text-primary">
+              <Binary className="h-5 w-5" />
             </div>
-            <div>
-              <p className="text-sm font-medium text-[#8B95A8]">Hello Admin</p>
-              <h2 className="text-xl font-semibold tracking-tight text-[#E8EBF0]">BSDock</h2>
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#8B95A8]">Command Center</p>
+              <h2 className="text-lg font-semibold tracking-tight text-[#E8EBF0]">BSDock Control Plane</h2>
             </div>
           </div>
           <Badge
             variant="outline"
-            className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+            className={cn(
+              'gap-1.5 border px-3 py-1.5 text-xs font-medium',
+              healthy
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+            )}
           >
-            <Activity className="mr-1 h-3 w-3" />
-            {healthy ? 'System Operational' : 'Degraded'}
+            <Activity className="h-3 w-3" />
+            {statusLabel}
           </Badge>
         </div>
 
-        <div className="mt-6 space-y-1">
-          <h1 className="text-3xl font-semibold leading-tight tracking-tight text-[#E8EBF0] sm:text-4xl">
-            Your control plane, live.
-            <br />
-            Currently routing through BSDock.
+        <div className="space-y-3">
+          <p className="text-sm font-medium uppercase tracking-[0.32em] text-primary/80">Home Control Plane</p>
+          <h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-[#E8EBF0] sm:text-4xl xl:text-[2.75rem]">
+            {healthy ? 'Operations are steady and ready to route.' : 'Attention needed across the control plane.'}
           </h1>
+          <p className="max-w-2xl text-sm leading-6 text-[#8B95A8] sm:text-base">
+            Review live panel health, runtime posture, and traffic throughput from one command surface before diving into node operations.
+          </p>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-[#8B95A8] sm:text-base">
-          <span className="inline-flex items-center gap-1.5">
-            <span
-              className="h-2 w-2 rounded-full bg-emerald-400"
-              aria-label={healthy ? 'System Operational' : 'Degraded'}
-            />
-            Panel v{status?.version ?? '—'}
-          </span>
-          <span className="hidden sm:inline">•</span>
-          <span>Uptime {formatUptime(status?.uptime_seconds)}</span>
-          <span className="hidden sm:inline">•</span>
-          <span className="font-mono">{status?.go_version ?? '—'}</span>
+        <div className="grid gap-3 md:grid-cols-4">
+          <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B95A8]">Panel</p>
+            <p className="mt-2 font-mono text-sm font-semibold text-[#E8EBF0]">v{status?.version ?? '—'}</p>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B95A8]">Uptime</p>
+            <p className="mt-2 font-mono text-sm font-semibold text-[#E8EBF0]">{formatUptime(status?.uptime_seconds)}</p>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B95A8]">Runtime</p>
+            <p className="mt-2 font-mono text-sm font-semibold text-[#E8EBF0]">{status?.go_version ?? '—'}</p>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B95A8]">Platform</p>
+            <p className="mt-2 font-mono text-sm font-semibold uppercase text-[#E8EBF0]">
+              {status?.platform ?? '—'} / {status?.arch ?? '—'}
+            </p>
+          </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] hover:bg-white/[0.08] hover:text-[#E8EBF0]"
-            onClick={() => setUpdateDialogOpen(true)}
-          >
-            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+        <div className="flex flex-wrap gap-3">
+          <button type="button" className={shellButtonClassName} onClick={() => setUpdateDialogOpen(true)}>
+            <RefreshCw className="h-3.5 w-3.5" />
             Update
-          </Button>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
           <a
             href="/nodes"
-            className="inline-flex h-9 items-center justify-center rounded-md border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-3 text-sm font-medium text-[#E8EBF0] transition-colors hover:bg-white/[0.08] hover:text-[#E8EBF0]"
+            className={shellButtonClassName}
           >
-            Usage & Counts
-            <ArrowUpRight className="ml-1.5 h-3.5 w-3.5" />
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Node registry
+            <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         </div>
       </CardContent>
@@ -135,28 +149,30 @@ export function PanelHeroCard({ status }: PanelHeroCardProps) {
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] hover:bg-white/[0.08] hover:text-[#E8EBF0]"
+              <button
+                type="button"
+                className={shellButtonClassName}
                 onClick={() => setUpdateDialogOpen(false)}
                 disabled={updating}
               >
                 Cancel
-              </Button>
-              <Button
-                size="sm"
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              </button>
+              <button
+                type="button"
+                className={cn(
+                  shellButtonClassName,
+                  'border-primary/30 bg-primary text-primary-foreground'
+                )}
                 onClick={handleUpdate}
                 disabled={updating}
               >
                 {updating ? (
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                  <RefreshCw className="h-3.5 w-3.5" />
                 )}
                 Confirm Update
-              </Button>
+              </button>
             </div>
           </div>
         </DialogContent>

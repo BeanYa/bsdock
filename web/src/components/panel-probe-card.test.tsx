@@ -25,6 +25,7 @@ describe('PanelProbeCard', () => {
   it('does not show fake host or healthy state when status is missing', () => {
     render(<PanelProbeCard status={null} />)
 
+    expect(screen.getByText('Panel runtime')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '—' })).toBeInTheDocument()
     expect(screen.getByText('Unknown')).toBeInTheDocument()
     expect(screen.queryByText('localhost')).not.toBeInTheDocument()

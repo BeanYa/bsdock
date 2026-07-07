@@ -9,6 +9,7 @@ describe('TrafficCharts', () => {
 
   it('keeps collecting state with fewer than two samples', () => {
     render(<TrafficCharts sent={0} received={0} updatedAt={0} />)
+    expect(screen.getByText('Signal Matrix')).toBeInTheDocument()
     expect(screen.getAllByText('Collecting data...').length).toBe(3)
   })
 

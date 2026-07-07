@@ -38,17 +38,17 @@ function HomePage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="grid grid-cols-1 gap-4 lg:grid-cols-3"
+        className="grid grid-cols-1 gap-4 xl:grid-cols-12"
       >
-        <div className="lg:col-span-2">
+        <div className="xl:col-span-8">
           <PanelHeroCard status={status} />
         </div>
-        <div className="grid grid-cols-2 gap-3 lg:col-span-1">
+        <div className="grid grid-cols-2 gap-3 xl:col-span-4">
           <StatCard
             title="Total Nodes"
             value={status?.nodes.total ?? '—'}
@@ -84,30 +84,18 @@ function HomePage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
+        className="grid grid-cols-1 gap-4 xl:grid-cols-12"
       >
-        <PanelProbeCard status={status} />
-      </motion.section>
-
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="space-y-3"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-[#8892A0] sm:text-sm">Signal Layer</p>
-            <h3 className="text-base font-medium text-[#C5C6C7] sm:text-lg">Traffic and historic telemetry</h3>
-          </div>
-          <p className="text-right text-xs text-[#8892A0]/70 sm:text-sm">
-            Real-time WebSocket throughput from the panel.
-          </p>
+        <div className="xl:col-span-5">
+          <PanelProbeCard status={status} />
         </div>
-        <TrafficCharts
-          sent={status?.network.sent ?? 0}
-          received={status?.network.received ?? 0}
-          updatedAt={lastUpdatedAt}
-        />
+        <div className="xl:col-span-7">
+          <TrafficCharts
+            sent={status?.network.sent ?? 0}
+            received={status?.network.received ?? 0}
+            updatedAt={lastUpdatedAt}
+          />
+        </div>
       </motion.section>
     </div>
   )
@@ -115,20 +103,22 @@ function HomePage() {
 
 function HomeSkeleton() {
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        <div className="space-y-4 xl:col-span-8">
           <Skeleton className="h-64 w-full rounded-xl" />
         </div>
-        <div className="grid grid-cols-2 gap-3 lg:col-span-1">
+        <div className="grid grid-cols-2 gap-3 xl:col-span-4">
           <Skeleton className="h-full min-h-[120px] w-full rounded-xl" />
           <Skeleton className="h-full min-h-[120px] w-full rounded-xl" />
           <Skeleton className="h-full min-h-[120px] w-full rounded-xl" />
           <Skeleton className="h-full min-h-[120px] w-full rounded-xl" />
         </div>
       </div>
-      <Skeleton className="h-80 w-full rounded-xl" />
-      <Skeleton className="h-40 w-full rounded-xl" />
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        <Skeleton className="h-[30rem] w-full rounded-xl xl:col-span-5" />
+        <Skeleton className="h-[30rem] w-full rounded-xl xl:col-span-7" />
+      </div>
     </div>
   )
 }
