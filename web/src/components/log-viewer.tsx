@@ -55,14 +55,31 @@ export function LogViewer({ entries }: LogViewerProps) {
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="glass h-full overflow-auto rounded-xl p-4"
+        className="command-surface h-full overflow-auto rounded-xl border border-white/[0.08] bg-[rgba(6,8,13,0.92)] p-0"
       >
         {entries.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-sm text-[#8B95A8]">
-            暂无日志
+          <div className="flex h-full min-h-[24rem] flex-col items-center justify-center px-6 text-center">
+            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#8B95A8]">Log stream idle</p>
+            <p className="mt-3 text-sm text-[#E8EBF0]">暂无日志</p>
+            <p className="mt-2 max-w-sm text-sm leading-6 text-[#8B95A8]">
+              切换日志源或等待新的运行事件，最新输出会持续追加在当前终端面板内。
+            </p>
           </div>
         ) : (
-          entries.map((entry, index) => <LogLine key={index} entry={entry} />)
+          <div className="min-h-full">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/[0.08] bg-[rgba(6,8,13,0.96)] px-4 py-3 backdrop-blur-xl">
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#8B95A8]">Live terminal</p>
+                <p className="mt-1 text-sm font-medium text-[#E8EBF0]">BSDock command stream</p>
+              </div>
+              <div className="rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[11px] uppercase tracking-[0.16em] text-[#8B95A8]">
+                {entries.length} lines
+              </div>
+            </div>
+            <div className="space-y-1 px-4 py-4">
+              {entries.map((entry, index) => <LogLine key={index} entry={entry} />)}
+            </div>
+          </div>
         )}
         <div aria-hidden="true" />
       </div>
