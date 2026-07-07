@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 interface StatusBadgeProps {
@@ -8,40 +7,54 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status, variant = 'default' }: StatusBadgeProps) {
   const normalized = status.toLowerCase()
-
-  const palette =
+  const tone =
     normalized === 'online'
-      ? 'bg-[#39FF14]/15 text-[#39FF14] hover:bg-[#39FF14]/25 border-[#39FF14]/40 shadow-[0_0_12px_rgba(57,255,20,0.08)]'
+      ? {
+          text: 'text-[#39FF14]',
+          accent: 'shadow-[inset_0_0_0_1px_rgba(57,255,20,0.22),0_0_12px_rgba(57,255,20,0.08)]',
+          dot: 'bg-[#39FF14]',
+        }
       : normalized === 'offline'
-      ? 'bg-[#FFC107]/15 text-[#FFC107] hover:bg-[#FFC107]/25 border-[#FFC107]/40 shadow-[0_0_12px_rgba(255,193,7,0.08)]'
-      : 'bg-[#FF4D4D]/15 text-[#FF4D4D] hover:bg-[#FF4D4D]/25 border-[#FF4D4D]/40 shadow-[0_0_12px_rgba(255,77,77,0.08)]'
+      ? {
+          text: 'text-[#FFC107]',
+          accent: 'shadow-[inset_0_0_0_1px_rgba(255,193,7,0.22),0_0_12px_rgba(255,193,7,0.08)]',
+          dot: 'bg-[#FFC107]',
+        }
+      : {
+          text: 'text-[#FF4D4D]',
+          accent: 'shadow-[inset_0_0_0_1px_rgba(255,77,77,0.22),0_0_12px_rgba(255,77,77,0.08)]',
+          dot: 'bg-[#FF4D4D]',
+        }
+
+  const shell =
+    'border border-white/[0.08] bg-[rgba(8,10,15,0.45)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm'
 
   if (variant === 'dot') {
     return (
       <span
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-xs uppercase tracking-wider',
-          palette
+          'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.2em]',
+          shell,
+          tone.text,
+          tone.accent
         )}
       >
-        <span
-          className={cn(
-            'h-2 w-2 rounded-full',
-            normalized === 'online'
-              ? 'bg-[#39FF14]'
-              : normalized === 'offline'
-              ? 'bg-[#FFC107]'
-              : 'bg-[#FF4D4D]'
-          )}
-        />
+        <span className={cn('h-2 w-2 rounded-full', tone.dot)} />
         {status}
       </span>
     )
   }
 
   return (
-    <Badge variant="outline" className={cn('border font-mono text-xs uppercase tracking-wider', palette)}>
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[11px] font-semibold uppercase tracking-[0.2em]',
+        shell,
+        tone.text,
+        tone.accent
+      )}
+    >
       {status}
-    </Badge>
+    </span>
   )
 }

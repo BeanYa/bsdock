@@ -120,4 +120,18 @@ describe('NodesPage metrics', () => {
     expect(screen.getAllByText('MEM').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('Disk').length).toBeGreaterThanOrEqual(1)
   })
+
+  it('renders the fleet command surface and empty state copy', async () => {
+    mockUseNodes.mockReturnValue({
+      nodes: [],
+      loading: false,
+      reload: vi.fn(),
+    })
+
+    renderWithTheme(<RouterProvider router={createNodesRouter()} />)
+
+    expect(await screen.findByPlaceholderText('Search nodes...')).toBeInTheDocument()
+    expect(screen.getByRole('combobox')).toBeInTheDocument()
+    expect(screen.getByText('Get started by creating your first node.')).toBeInTheDocument()
+  })
 })

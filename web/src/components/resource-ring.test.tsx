@@ -28,4 +28,19 @@ describe('ResourceRing', () => {
     render(<ResourceRing label="CPU" percent={42} subtitle="4 Cores" />)
     expect(screen.getByText('4 Cores')).toBeInTheDocument()
   })
+
+  it('uses destructive red at 90 percent and above', () => {
+    const { container } = render(<ResourceRing label="CPU" percent={91} />)
+    expect(container.querySelector('circle[stroke="#FF4D4D"]')).toBeInTheDocument()
+  })
+
+  it('uses amber between 70 and 89 percent', () => {
+    const { container } = render(<ResourceRing label="MEM" percent={75} />)
+    expect(container.querySelector('circle[stroke="#FFC107"]')).toBeInTheDocument()
+  })
+
+  it('keeps motion limited to transform and opacity-safe properties', () => {
+    const { container } = render(<ResourceRing label="CPU" percent={42} />)
+    expect(container.querySelector('circle[stroke-dashoffset]')).not.toHaveClass('transition-[stroke-dashoffset]')
+  })
 })

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Plus, Search } from 'lucide-react'
+import { ListFilter, Plus, Search } from 'lucide-react'
 import { api, getDefaultPanelURL } from '@/lib/api'
 import { useNodes } from '@/hooks/useNodes'
 import { Button } from '@/components/ui/button'
@@ -215,40 +215,81 @@ function NodesPage() {
         </Dialog>
       </PageHeader>
 
-      <div className="glass flex flex-col gap-3 rounded-xl p-3 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8B95A8]" />
-          <Input
-            placeholder="Search nodes..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="border-white/[0.08] bg-[rgba(8,10,15,0.45)] pl-9 text-[#E8EBF0] placeholder:text-[#8B95A8] focus-visible:ring-[#00F0FF]"
-          />
+      <section className="command-surface rounded-xl border border-white/[0.08] p-3 sm:p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-3 py-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-[rgba(255,255,255,0.02)]">
+              <Search className="h-4 w-4 text-[#8B95A8]" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8B95A8]">
+                Fleet Search
+              </p>
+              <Input
+                placeholder="Search nodes..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-auto border-0 bg-transparent px-0 py-0 text-sm text-[#E8EBF0] shadow-none placeholder:text-[#8B95A8] focus-visible:ring-0"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row lg:w-auto lg:items-center">
+            <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-3 py-2.5">
+              <ListFilter className="h-4 w-4 text-[#8B95A8]" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-auto w-full border-0 bg-transparent px-0 py-0 text-sm text-[#E8EBF0] shadow-none focus:ring-0 sm:w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent className="border-white/[0.08] bg-[rgba(20,28,45,0.85)] backdrop-blur-xl">
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value} className="focus:bg-[rgba(8,10,15,0.45)] focus:text-[#E8EBF0]">
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="rounded-xl border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-3 py-2 text-xs text-[#8B95A8]">
+              <span className="font-mono text-sm font-semibold text-[#E8EBF0]">{filteredNodes.length}</span>{' '}
+              of {nodes.length} nodes
+            </div>
+          </div>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] focus:ring-[#00F0FF] sm:w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent className="border-white/[0.08] bg-[rgba(20,28,45,0.85)] backdrop-blur-xl">
-            {statusOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value} className="focus:bg-[rgba(8,10,15,0.45)] focus:text-[#E8EBF0]">
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {loading ? (
           Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="glass relative flex flex-col p-4"
+              className="command-surface relative flex min-h-[27rem] flex-col rounded-xl border border-white/[0.08] p-0"
             >
-              <div className="absolute left-0 right-0 top-0 h-[3px] bg-[#8B95A8]/50" aria-hidden="true" />
-              <Skeleton className="h-5 w-3/4 bg-[rgba(8,10,15,0.45)]" />
-              <Skeleton className="mt-3 h-4 w-16 bg-[rgba(8,10,15,0.45)]" />
+              <div className="absolute left-0 right-0 top-0 h-1 bg-[#8B95A8]/50" aria-hidden="true" />
+              <div className="flex h-full flex-col px-4 pb-4 pt-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-7 w-20 rounded-full bg-[rgba(8,10,15,0.45)]" />
+                    <Skeleton className="h-6 w-3/4 bg-[rgba(8,10,15,0.45)]" />
+                    <Skeleton className="h-4 w-2/3 bg-[rgba(8,10,15,0.45)]" />
+                  </div>
+                  <Skeleton className="h-8 w-24 rounded-full bg-[rgba(8,10,15,0.45)]" />
+                </div>
+                <div className="mt-5 rounded-xl border border-white/[0.08] bg-[rgba(8,10,15,0.32)] px-3 py-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <Skeleton className="h-20 w-full rounded-full bg-[rgba(8,10,15,0.45)]" />
+                    <Skeleton className="h-20 w-full rounded-full bg-[rgba(8,10,15,0.45)]" />
+                    <Skeleton className="h-20 w-full rounded-full bg-[rgba(8,10,15,0.45)]" />
+                  </div>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <Skeleton className="h-16 w-full rounded-xl bg-[rgba(8,10,15,0.45)]" />
+                  <Skeleton className="h-16 w-full rounded-xl bg-[rgba(8,10,15,0.45)]" />
+                </div>
+                <div className="mt-auto flex gap-2 pt-4">
+                  <Skeleton className="h-9 flex-1 rounded-md bg-[rgba(8,10,15,0.45)]" />
+                  <Skeleton className="h-9 flex-1 rounded-md bg-[rgba(8,10,15,0.45)]" />
+                </div>
+              </div>
             </div>
           ))
         ) : filteredNodes.length === 0 ? (

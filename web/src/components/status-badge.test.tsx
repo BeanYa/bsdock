@@ -21,4 +21,10 @@ describe('StatusBadge', () => {
     render(<StatusBadge status="pending" />)
     expect(screen.getByText('pending')).toBeInTheDocument()
   })
+
+  it('applies command center border and background tokens', () => {
+    render(<StatusBadge status="offline" />)
+    expect(screen.getByText('offline')).toHaveClass('bg-[rgba(8,10,15,0.45)]')
+    expect(screen.getByText('offline')).toHaveClass('border-white/[0.08]')
+  })
 })

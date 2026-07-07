@@ -37,12 +37,23 @@ export function ResourceRing({ label, percent, size = 'md', subtitle, color: col
   const color = colorProp ?? usageColor
 
   const labelColor = LABEL_COLORS[label.toLowerCase()] ?? '#8B95A8'
+  const glowColor =
+    safePercent == null
+      ? 'rgba(136,146,160,0.12)'
+      : safePercent >= 90
+      ? 'rgba(255,77,77,0.16)'
+      : safePercent >= 70
+      ? 'rgba(255,193,7,0.16)'
+      : 'rgba(0,240,255,0.12)'
 
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <div className="relative drop-shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
+      <div
+        className="relative rounded-full border border-white/[0.04] bg-[rgba(8,10,15,0.28)] p-1 drop-shadow-[0_10px_22px_rgba(0,0,0,0.24)]"
+        style={{ boxShadow: `inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 1px rgba(255,255,255,0.02), 0 10px 22px rgba(0,0,0,0.24), 0 0 18px ${glowColor}` }}
+      >
         <svg
-          className={`${classes.svg} -rotate-90 transform drop-shadow-[0_0_6px_${color}40]`}
+          className={`${classes.svg} -rotate-90 transform`}
           viewBox={`0 0 ${classes.box} ${classes.box}`}
           role="img"
           aria-label={`${label} ${safePercent != null ? `${safePercent}%` : 'unknown'}`}
@@ -65,7 +76,6 @@ export function ResourceRing({ label, percent, size = 'md', subtitle, color: col
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
-            className="transition-[stroke-dashoffset] duration-700 ease-out motion-reduce:transition-none"
           />
         </svg>
         <span className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-mono font-bold leading-none text-[#E8EBF0] ${classes.percent}`}>

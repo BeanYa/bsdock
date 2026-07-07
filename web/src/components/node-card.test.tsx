@@ -107,6 +107,29 @@ describe('NodeCard', () => {
     expect(screen.getAllByText('Disk').length).toBeGreaterThanOrEqual(1)
   })
 
+  it('shows compact metadata for uptime and version', () => {
+    const node: Node = {
+      ...baseNode,
+      system_info: {
+        ...baseNode.system_info,
+        uptime: 90061,
+        version: 'v1.2.3',
+      },
+    }
+
+    renderCard(node)
+    expect(screen.getByText('Uptime')).toBeInTheDocument()
+    expect(screen.getByText('1d 1h')).toBeInTheDocument()
+    expect(screen.getByText('Version')).toBeInTheDocument()
+    expect(screen.getByText('v1.2.3')).toBeInTheDocument()
+  })
+
+  it('renders status strip and platform badge', () => {
+    const { container } = renderCard(baseNode)
+    expect(container.querySelector('.h-1')).toBeInTheDocument()
+    expect(screen.getByText('linux')).toHaveClass('rounded-full')
+  })
+
   it('uses sm ring size on small viewports', () => {
     window.matchMedia = vi.fn().mockImplementation((query: string) => ({
       matches: query === '(max-width: 639px)',
