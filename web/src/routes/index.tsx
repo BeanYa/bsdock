@@ -7,7 +7,7 @@ import { TrafficCharts } from '@/components/traffic-chart'
 import { StatCard } from '@/components/stat-card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Server, CheckCircle2, XCircle, Clock } from 'lucide-react'
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 
 export const Route = createFileRoute('/')({
   component: IndexRoute,
@@ -23,6 +23,15 @@ function IndexRoute() {
 
 function HomePage() {
   const { status, loading, error, lastUpdatedAt } = usePanelStatus(5000)
+  const reduceMotion = useReducedMotion()
+  const sectionMotion = (delay: number) =>
+    reduceMotion
+      ? { initial: false, animate: { opacity: 1 } }
+      : {
+          initial: { opacity: 0, y: 20 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.5, delay },
+        }
 
   if (loading && !status) {
     return <HomeSkeleton />
@@ -40,9 +49,7 @@ function HomePage() {
   return (
     <div className="space-y-5">
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        {...sectionMotion(0.1)}
         className="grid grid-cols-1 gap-4 xl:grid-cols-12"
       >
         <div className="xl:col-span-8">
@@ -81,9 +88,7 @@ function HomePage() {
       </motion.section>
 
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+        {...sectionMotion(0.2)}
         className="grid grid-cols-1 gap-4 xl:grid-cols-12"
       >
         <div className="xl:col-span-5">

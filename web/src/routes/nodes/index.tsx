@@ -12,7 +12,7 @@ import { InstallCommandDisplay } from '@/components/install-command-card'
 import { PageHeader } from '@/components/page-header'
 import { NodeCard, type Node } from '@/components/node-card'
 import { useToast } from '@/hooks/use-toast'
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import {
   Dialog,
   DialogContent,
@@ -42,6 +42,7 @@ const statusOptions = [
 function NodesPage() {
   const { nodes, loading, reload } = useNodes()
   const { toast } = useToast()
+  const reduceMotion = useReducedMotion()
   const [name, setName] = useState('')
   const [panelURL, setPanelURL] = useState(getDefaultPanelURL())
   const [platform, setPlatform] = useState('linux')
@@ -63,6 +64,15 @@ function NodesPage() {
       return matchesSearch && matchesStatus
     })
   }, [nodes, search, statusFilter])
+
+  const cardMotion = (index: number) =>
+    reduceMotion
+      ? { initial: false, animate: { opacity: 1 } }
+      : {
+          initial: { opacity: 0, y: 16 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.4, delay: index * 0.05 },
+        }
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -303,9 +313,7 @@ function NodesPage() {
           filteredNodes.map((node, index) => (
             <motion.div
               key={node.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
+              {...cardMotion(index)}
             >
               <NodeCard
                 node={node as Node}

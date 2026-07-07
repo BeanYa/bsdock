@@ -62,13 +62,13 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
           </div>
         </div>
 
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+        <div className="grid gap-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3 sm:p-4">
               <ResourceRing
                 label="CPU"
                 percent={cpuPercent}
-                size="lg"
+                size="md"
                 subtitle={status?.cpu.cores ? `${status.cpu.cores} Core${status.cpu.cores > 1 ? 's' : ''}` : undefined}
               />
             </div>
@@ -76,7 +76,7 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
               <ResourceRing
                 label="MEM"
                 percent={memPercent}
-                size="lg"
+                size="md"
                 subtitle={
                   status?.memory.used !== undefined && status?.memory.total !== undefined
                     ? `${formatBytes(status.memory.used)} / ${formatBytes(status.memory.total)}`
@@ -88,7 +88,7 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
               <ResourceRing
                 label="Disk"
                 percent={diskPercent}
-                size="lg"
+                size="md"
                 subtitle={
                   status?.disk.used !== undefined && status?.disk.total !== undefined
                     ? `${formatBytes(status.disk.used)} / ${formatBytes(status.disk.total)}`
@@ -99,7 +99,7 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
           </div>
 
           <div className="grid gap-3">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 xl:grid-cols-1">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <InfoCard
                 title="IP"
                 value={status && status.ips.length > 0 ? status.ips.join(', ') : undefined}
@@ -115,7 +115,7 @@ export function PanelProbeCard({ status }: PanelProbeCardProps) {
               <InfoCard title="Version" value={status?.version ?? undefined} />
             </div>
 
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {stats.map((item) => (
                 <div
                   key={item.title}
