@@ -20,7 +20,7 @@ function NavLinks({ collapsed, onClick }: { collapsed?: boolean; onClick?: () =>
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
   return (
-    <nav className="flex-1 space-y-1 p-3">
+    <nav className="flex-1 space-y-1 px-3 py-4">
       {navItems.map((item) => {
         const Icon = item.icon
         const active = pathname === item.to || pathname.startsWith(`${item.to}/`)
@@ -30,15 +30,30 @@ function NavLinks({ collapsed, onClick }: { collapsed?: boolean; onClick?: () =>
             to={item.to}
             onClick={onClick}
             className={cn(
-              'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-            active
-              ? 'border-l-2 border-[#00F0FF] bg-[rgba(0,240,255,0.08)] text-[#00F0FF] shadow-[inset_0_0_12px_rgba(0,240,255,0.08)]'
-              : 'text-[#8B95A8] hover:bg-[rgba(255,255,255,0.05)] hover:text-[#E8EBF0]',
-              collapsed && 'justify-center px-2'
+              'group relative flex min-h-11 items-center gap-3 overflow-hidden rounded-lg px-3 text-sm font-medium transition-all duration-200',
+              active
+                ? 'bg-[rgba(5,16,28,0.88)] text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_16px_36px_rgba(2,12,26,0.28)]'
+                : 'text-slate-300 hover:bg-white/[0.05] hover:text-foreground',
+              collapsed && 'justify-center px-0'
             )}
             title={collapsed ? item.label : undefined}
           >
-            <Icon className="h-4 w-4" />
+            <span
+              aria-hidden="true"
+              className={cn(
+                'absolute bottom-2 left-0 top-2 w-px rounded-full bg-transparent transition-colors',
+                active && 'bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.85)]'
+              )}
+            />
+            <span
+              className={cn(
+                'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-transparent bg-white/[0.02] text-slate-400 transition-colors',
+                active && 'border-cyan-400/20 bg-cyan-400/10 text-cyan-200',
+                !active && 'group-hover:border-white/10 group-hover:text-foreground'
+              )}
+            >
+              <Icon className="h-4 w-4" />
+            </span>
             {!collapsed && <span>{item.label}</span>}
           </Link>
         )
@@ -50,19 +65,38 @@ function NavLinks({ collapsed, onClick }: { collapsed?: boolean; onClick?: () =>
 function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   return (
     <>
-      <div className="flex h-14 items-center border-b px-3">
-        <Link to="/" className={cn('flex items-center gap-2 font-bold', collapsed && 'justify-center w-full')}>
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+      <div className="flex h-16 items-center border-b border-white/10 px-4">
+        <Link
+          to="/"
+          className={cn('flex min-w-0 items-center gap-3', collapsed && 'w-full justify-center')}
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cyan-400/15 text-cyan-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             B
           </div>
-          {!collapsed && <span>BSDock</span>}
+          {!collapsed && (
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold uppercase tracking-[0.24em] text-cyan-200/90">
+                BSDock
+              </div>
+              <div className="truncate text-xs text-muted-foreground">Command Center</div>
+            </div>
+          )}
         </Link>
       </div>
 
       <NavLinks collapsed={collapsed} />
 
-      <div className="border-t p-3">
-        <Button variant="ghost" size="icon" onClick={onToggle} className={cn('w-full', collapsed && 'justify-center')}>
+      <div className="border-t border-white/10 p-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggle}
+          className={cn(
+            'h-11 w-full rounded-lg border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.07] hover:text-foreground',
+            collapsed && 'justify-center'
+          )}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
@@ -77,8 +111,8 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       <aside
         data-testid="desktop-sidebar"
         className={cn(
-          'fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-white/[0.08] bg-[rgba(20,28,45,0.75)] backdrop-blur-xl transition-all duration-300 ease-in-out lg:flex',
-          collapsed ? 'w-16' : 'w-64'
+          'command-surface fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-white/10 backdrop-blur-xl transition-[width] duration-300 ease-out lg:flex',
+          collapsed ? 'lg:w-20' : 'lg:w-72'
         )}
       >
         <SidebarContent collapsed={collapsed} onToggle={onToggle} />
@@ -92,15 +126,29 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             onClick={onMobileClose}
             aria-hidden="true"
           />
-          <aside data-testid="mobile-sidebar" className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-white/[0.08] bg-[rgba(20,28,45,0.75)] backdrop-blur-xl lg:hidden">
-            <div className="flex h-14 items-center justify-between border-b px-3">
-              <Link to="/" className="flex items-center gap-2 font-bold" onClick={onMobileClose}>
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+          <aside
+            data-testid="mobile-sidebar"
+            className="command-surface fixed left-0 top-0 z-50 flex h-screen w-72 max-w-[calc(100vw-2rem)] flex-col border-r border-white/10 backdrop-blur-xl lg:hidden"
+          >
+            <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
+              <Link to="/" className="flex min-w-0 items-center gap-3" onClick={onMobileClose}>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-400/15 text-cyan-200">
                   B
                 </div>
-                <span>BSDock</span>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold uppercase tracking-[0.24em] text-cyan-200/90">
+                    BSDock
+                  </div>
+                  <div className="truncate text-xs text-muted-foreground">Command Center</div>
+                </div>
               </Link>
-              <Button variant="ghost" size="icon" onClick={onMobileClose} aria-label="Close menu">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onMobileClose}
+                aria-label="Close menu"
+                className="h-10 w-10 rounded-lg border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.07] hover:text-foreground"
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>

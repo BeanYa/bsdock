@@ -40,6 +40,7 @@ function RootComponent() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="fixed inset-0 -z-10 bg-background" aria-hidden="true" />
+      <div className="fixed inset-0 -z-10 command-grid opacity-60" aria-hidden="true" />
       <div className="fixed inset-0 -z-10 ambient-light" aria-hidden="true" />
       <AppSidebar
         collapsed={collapsed}
@@ -49,13 +50,15 @@ function RootComponent() {
       />
       <div
         className={cn(
-          'flex min-h-screen flex-col transition-all duration-300 ease-in-out',
-          collapsed ? 'lg:pl-16' : 'lg:pl-64'
+          'flex min-h-screen flex-col transition-[padding] duration-300 ease-out',
+          collapsed ? 'lg:pl-20' : 'lg:pl-72'
         )}
       >
         <AppHeader onMobileMenuOpen={() => setMobileOpen(true)} />
-        <main className="flex-1 bg-muted/30 p-4 lg:p-6">
-          <Outlet />
+        <main className="flex-1 px-3 py-4 sm:px-5 lg:px-6 lg:py-6">
+          <div className="mx-auto w-full max-w-[1520px]">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
