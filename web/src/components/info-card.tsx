@@ -7,10 +7,12 @@ interface InfoCardProps {
 
 export function InfoCard({ title, value }: InfoCardProps) {
   return (
-    <Card className="glass">
-      <CardContent className="p-3 sm:p-4">
-        <p className="text-xs font-medium uppercase tracking-wider text-[#8B95A8] sm:text-sm">{title}</p>
-        <p className="mt-1 break-words font-mono text-sm font-semibold leading-tight text-[#E8EBF0] sm:text-base">
+    <Card className="command-surface rounded-xl border-white/[0.08] shadow-none">
+      <CardContent className="space-y-2 p-3 sm:p-4">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:text-xs">
+          {title}
+        </p>
+        <p className="break-all font-mono text-sm font-semibold leading-tight text-foreground sm:text-[15px]">
           {value ?? '—'}
         </p>
       </CardContent>

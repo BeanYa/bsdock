@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Check, Copy, RotateCcw } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CopyButton } from '@/components/copy-button'
 import { GlassCard } from '@/components/glass-card'
 
 interface InstallCommandDisplayProps {
@@ -19,20 +17,21 @@ export function InstallCommandDisplay({ installCommand, loading, onGenerate }: I
           <p className="text-sm text-muted-foreground">
             Install command is not stored for security. Generate a new one to register or reset this node.
           </p>
-          <Button
+          <button
+            type="button"
             onClick={onGenerate}
             disabled={loading}
-            className="w-full bg-[#00F0FF] text-[#080A0F] hover:bg-[#00F0FF]/90 sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground opacity-100 hover:opacity-90 disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
           >
-            <RotateCcw className="mr-2 h-4 w-4" />
+            <RotateCcw className="h-4 w-4" />
             {loading ? 'Generating...' : 'Generate Install Command'}
-          </Button>
+          </button>
         </>
       ) : (
         <>
-          <div className="relative overflow-hidden rounded-md border border-white/[0.08] bg-[#050607] p-4 shadow-inner">
-            <div className="absolute left-0 top-0 h-full w-1 bg-[#00F0FF]" aria-hidden="true" />
-            <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all pl-3 font-mono text-sm leading-relaxed text-[#E8EBF0]">
+          <div className="relative overflow-hidden rounded-lg border border-white/[0.08] bg-[#030712] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="absolute left-0 top-0 h-full w-1 bg-primary" aria-hidden="true" />
+            <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all pl-4 font-mono text-sm leading-relaxed text-[#E8EBF0]">
               <code>
                 <span className="select-none text-[#39FF14]">$ </span>
                 {installCommand}
@@ -40,19 +39,23 @@ export function InstallCommandDisplay({ installCommand, loading, onGenerate }: I
             </pre>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <CopyButton
-              text={installCommand}
-              className="glass flex-1 text-[#E8EBF0] hover:border-[#00F0FF] hover:bg-[rgba(0,240,255,0.10)] hover:text-[#00F0FF]"
-            />
-            <Button
-              size="sm"
+            <button
+              type="button"
+              onClick={() => navigator.clipboard.writeText(installCommand)}
+              className="command-surface inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-white/[0.08] px-3 py-2 text-sm font-medium text-foreground opacity-100 hover:opacity-90"
+            >
+              <Copy className="h-4 w-4" />
+              Copy
+            </button>
+            <button
+              type="button"
               onClick={onGenerate}
               disabled={loading}
-              className="glass flex-1 text-[#E8EBF0] hover:border-[#00F0FF] hover:bg-[rgba(0,240,255,0.10)] hover:text-[#00F0FF]"
+              className="command-surface inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-white/[0.08] px-3 py-2 text-sm font-medium text-foreground opacity-100 hover:opacity-90 disabled:pointer-events-none disabled:opacity-50"
             >
-              <RotateCcw className="mr-2 h-4 w-4" />
+              <RotateCcw className="h-4 w-4" />
               {loading ? 'Generating...' : 'Regenerate'}
-            </Button>
+            </button>
           </div>
         </>
       )}
@@ -72,20 +75,19 @@ export function InstallCommandCard(props: InstallCommandCardProps) {
   }
 
   return (
-    <GlassCard>
+    <GlassCard hover={false} className="command-surface">
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center justify-between text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <CardTitle className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           <span>Install Command</span>
           {props.installCommand && (
-            <Button
-              variant="outline"
-              size="icon"
+            <button
+              type="button"
               aria-label="Copy"
               onClick={handleCopy}
-              className="glass h-7 w-7 px-2 text-[#E8EBF0] hover:border-[#00F0FF] hover:bg-[rgba(0,240,255,0.10)] hover:text-[#00F0FF]"
+              className="command-surface inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/[0.08] text-foreground opacity-100 hover:opacity-90"
             >
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            </Button>
+            </button>
           )}
         </CardTitle>
       </CardHeader>

@@ -6,9 +6,7 @@ import { useNode } from '@/hooks/useNode'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { getStatusColorClasses } from '@/lib/status'
-import { buttonVariants } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent } from '@/components/ui/card'
 
 import { InstallCommandCard } from '@/components/install-command-card'
 import { PageHeader } from '@/components/page-header'
@@ -128,7 +126,10 @@ function NodeDetailPage() {
       <div className="flex min-h-[50vh] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
         <h2 className="text-lg font-medium">Node not found</h2>
         <p className="mt-1 text-sm text-muted-foreground">The requested node does not exist or has been removed.</p>
-        <Link to="/nodes" className={cn(buttonVariants(), 'mt-4')}>
+        <Link
+          to="/nodes"
+          className="command-surface mt-4 inline-flex items-center justify-center rounded-md border border-white/[0.08] px-4 py-2 text-sm font-medium text-foreground opacity-100 hover:opacity-90"
+        >
           Back to Nodes
         </Link>
       </div>
@@ -143,6 +144,20 @@ function NodeDetailPage() {
   const diskTotal = Number(info.disk_total)
   const networkSent = info.network_sent ?? info.net_sent
   const networkReceived = info.network_received ?? info.net_received
+  const metricCards = [
+    {
+      label: 'Network',
+      value: formatSpeed(info.network_speed ?? info.net_speed),
+    },
+    {
+      label: 'Packets',
+      value: formatPackets(info.packets_per_sec ?? info.packets),
+    },
+    {
+      label: 'Disk I/O',
+      value: formatSpeed(info.disk_io),
+    },
+  ]
 
   return (
     <div className="space-y-6">
@@ -155,131 +170,158 @@ function NodeDetailPage() {
           <Link
             to="/nodes"
             aria-label="Back to Nodes"
-            className={cn(
-              buttonVariants({ variant: 'outline', size: 'icon' }),
-              'border-white/[0.08] bg-[rgba(8,10,15,0.45)] text-[#E8EBF0] hover:bg-white/[0.08] hover:text-[#E8EBF0]'
-            )}
+            className="command-surface inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/[0.08] text-foreground opacity-100 hover:opacity-90"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </PageHeader>
       </motion.section>
 
-      {/* Status hero */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="glass relative overflow-hidden rounded-xl p-4 sm:p-5"
+        className="command-surface relative overflow-hidden rounded-xl border border-white/[0.08] p-4 sm:p-5"
       >
         <div className={cn('absolute left-0 right-0 top-0 h-1', getStatusColorClasses(node.status).bg)} aria-hidden="true" />
 
-        <div>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#8B95A8]">Server Probe</span>
-              <h2 className="text-xl font-semibold tracking-tight text-[#E8EBF0] sm:text-2xl">{node.name}</h2>
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  {node.platform || '—'}
+                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  Server Probe
+                </span>
+              </div>
+              <div>
+                <h2 className="truncate text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                  {node.name}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Node vitals, throughput, and hardware identity in one surface.
+                </p>
+              </div>
             </div>
             <StatusBadge status={node.status} variant="dot" />
           </div>
 
-          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-            <Card className="glass">
-              <CardContent className="flex flex-col items-center justify-center p-4 sm:p-5">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.8fr)_minmax(18rem,1fr)]">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="rounded-xl border border-white/[0.08] bg-[rgba(8,10,15,0.38)] p-4 sm:p-5">
                 <ResourceRing
                   label="CPU"
                   percent={info.cpu_percent as number | null}
                   size="xl"
                   subtitle={info.cpu_cores != null ? `${info.cpu_cores} Core${Number(info.cpu_cores) > 1 ? 's' : ''}` : undefined}
                 />
-              </CardContent>
-            </Card>
-            <Card className="glass">
-              <CardContent className="flex flex-col items-center justify-center p-4 sm:p-5">
+              </div>
+              <div className="rounded-xl border border-white/[0.08] bg-[rgba(8,10,15,0.38)] p-4 sm:p-5">
                 <ResourceRing
                   label="MEM"
                   percent={info.memory_total ? ((info.memory_used as number ?? 0) / (info.memory_total as number)) * 100 : null}
                   size="xl"
                   subtitle={memoryTotal > 0 ? `${formatBytes(memoryUsed)} / ${formatBytes(memoryTotal)}` : undefined}
                 />
-              </CardContent>
-            </Card>
-            <Card className="glass">
-              <CardContent className="flex flex-col items-center justify-center p-4 sm:p-5">
+              </div>
+              <div className="rounded-xl border border-white/[0.08] bg-[rgba(8,10,15,0.38)] p-4 sm:p-5">
                 <ResourceRing
                   label="Disk"
                   percent={diskTotal > 0 ? (diskUsed / diskTotal) * 100 : null}
                   size="xl"
                   subtitle={diskTotal > 0 ? `${formatBytes(diskUsed)} / ${formatBytes(diskTotal)}` : undefined}
                 />
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1">
+              {metricCards.map((metric) => (
+                <div
+                  key={metric.label}
+                  className="rounded-xl border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-3 py-2.5"
+                >
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    {metric.label}
+                  </p>
+                  <p className="mt-1 break-all font-mono text-xs font-semibold text-foreground">
+                    {metric.value}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <div className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-3 py-2 sm:flex-col sm:items-start sm:justify-center sm:gap-1">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">Network</span>
-              <span className="font-mono text-xs font-semibold text-[#E8EBF0]">{formatSpeed(info.network_speed ?? info.net_speed)}</span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-3 py-2 sm:flex-col sm:items-start sm:justify-center sm:gap-1">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">Packets</span>
-              <span className="font-mono text-xs font-semibold text-[#E8EBF0]">{formatPackets(info.packets_per_sec ?? info.packets)}</span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-[rgba(8,10,15,0.45)] px-3 py-2 sm:flex-col sm:items-start sm:justify-center sm:gap-1">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">Disk I/O</span>
-              <span className="font-mono text-xs font-semibold text-[#E8EBF0]">{formatSpeed(info.disk_io)}</span>
-            </div>
-          </div>
-
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
             <div className="rounded-xl border border-white/[0.08] bg-[rgba(8,10,15,0.45)] p-3 sm:p-4">
-              <h3 className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">Total Data</h3>
-              <div className="mt-2 grid grid-cols-2 gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgba(8,10,15,0.45)]">
-                    <ArrowUp className="h-3.5 w-3.5 text-[#7DD3C0]" />
+              <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Total Data
+              </h3>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#7DD3C0]/12">
+                    <ArrowUp className="h-4 w-4 text-[#7DD3C0]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] text-[#8B95A8]">Sent</p>
-                    <p className="truncate font-mono text-xs font-semibold text-[#E8EBF0]">{formatBytes(Number(networkSent))}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      Sent
+                    </p>
+                    <p className="break-all font-mono text-xs font-semibold text-foreground">
+                      {formatBytes(Number(networkSent))}
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgba(8,10,15,0.45)]">
-                    <ArrowDown className="h-3.5 w-3.5 text-[#C084FC]" />
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#C084FC]/12">
+                    <ArrowDown className="h-4 w-4 text-[#C084FC]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] text-[#8B95A8]">Received</p>
-                    <p className="truncate font-mono text-xs font-semibold text-[#E8EBF0]">{formatBytes(Number(networkReceived))}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      Received
+                    </p>
+                    <p className="break-all font-mono text-xs font-semibold text-foreground">
+                      {formatBytes(Number(networkReceived))}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div data-testid="ip-section" className="rounded-xl border border-white/[0.08] bg-[rgba(8,10,15,0.45)] p-3 sm:p-4">
-              <h3 className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">IP Addresses</h3>
-              <div className="mt-2 grid grid-cols-2 gap-3">
+              <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                IP Addresses
+              </h3>
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">IPv4</p>
-                  <div className="mt-1 space-y-0.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    IPv4
+                  </p>
+                  <div className="mt-2 space-y-1">
                     {ipv4.length > 0 ? (
                       ipv4.map((ip, index) => (
-                        <p key={`ipv4-${index}`} className="truncate font-mono text-xs font-semibold text-[#E8EBF0]">{ip}</p>
+                        <p key={`ipv4-${index}`} className="break-all font-mono text-xs font-semibold text-foreground">
+                          {ip}
+                        </p>
                       ))
                     ) : (
-                      <p className="text-xs font-semibold text-[#8B95A8]">—</p>
+                      <p className="text-xs font-semibold text-muted-foreground">—</p>
                     )}
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-[#8B95A8]">IPv6</p>
-                  <div className="mt-1 space-y-0.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    IPv6
+                  </p>
+                  <div className="mt-2 space-y-1">
                     {ipv6.length > 0 ? (
                       ipv6.map((ip, index) => (
-                        <p key={`ipv6-${index}`} className="break-all font-mono text-xs font-semibold text-[#E8EBF0]">{ip}</p>
+                        <p key={`ipv6-${index}`} className="break-all font-mono text-xs font-semibold text-foreground">
+                          {ip}
+                        </p>
                       ))
                     ) : (
-                      <p className="text-xs font-semibold text-[#8B95A8]">—</p>
+                      <p className="text-xs font-semibold text-muted-foreground">—</p>
                     )}
                   </div>
                 </div>
@@ -287,7 +329,7 @@ function NodeDetailPage() {
             </div>
           </div>
 
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <InfoCard
               title="CPU"
               value={
@@ -302,13 +344,12 @@ function NodeDetailPage() {
         </div>
       </motion.section>
 
-      {/* Hardware */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-[#8B95A8]">Hardware</h2>
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Hardware</h2>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <InfoCard title="Hostname" value={info.hostname != null ? String(info.hostname) : undefined} />
           <InfoCard title="OS / Arch" value={Boolean(info.os) || Boolean(info.arch) ? `${info.os ? String(info.os) : '—'} / ${info.arch ? String(info.arch) : '—'}` : undefined} />

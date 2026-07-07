@@ -22,4 +22,17 @@ describe('InfoCard', () => {
     render(<InfoCard title="Count" value="0" />)
     expect(screen.getByText('0')).toBeInTheDocument()
   })
+
+  it('uses compact command surface styling without truncating long values', () => {
+    render(
+      <InfoCard
+        title="Hostname"
+        value="2001:0db8:85a3:0000:0000:8a2e:0370:7334.example.internal"
+      />
+    )
+
+    const value = screen.getByText('2001:0db8:85a3:0000:0000:8a2e:0370:7334.example.internal')
+    expect(value).toHaveClass('break-all', 'font-mono')
+    expect(value.closest('[class*="command-surface"]')).toBeTruthy()
+  })
 })
