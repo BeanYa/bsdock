@@ -19,12 +19,24 @@ describe('StatusBadge', () => {
 
   it('uses destructive styling for pending status', () => {
     render(<StatusBadge status="pending" />)
-    expect(screen.getByText('pending')).toBeInTheDocument()
+    expect(screen.getByText('pending')).toHaveClass('text-[#FF4D4D]')
   })
 
   it('applies command center border and background tokens', () => {
     render(<StatusBadge status="offline" />)
     expect(screen.getByText('offline')).toHaveClass('bg-[rgba(8,10,15,0.45)]')
     expect(screen.getByText('offline')).toHaveClass('border-white/[0.08]')
+  })
+
+  it('maps dot variant status tokens to shell and dot colors', () => {
+    render(<StatusBadge status="offline" variant="dot" />)
+
+    const badge = screen.getByText('offline')
+    const dot = badge.querySelector('span')
+
+    expect(badge).toHaveClass('text-[#FFC107]')
+    expect(badge).toHaveClass('bg-[rgba(8,10,15,0.45)]')
+    expect(badge).toHaveClass('border-white/[0.08]')
+    expect(dot).toHaveClass('bg-[#FFC107]')
   })
 })
