@@ -1,5 +1,12 @@
 mode: master
+address: ""
 port: "8080"
+base_uri: "/"
+domain: ""
+panel_uri: ""
+tls:
+  cert_path: ""
+  key_path: ""
 database:
   path: "./panel.db"
 jwt:
@@ -14,3 +21,4 @@ agent:
   heartbeat_timeout_seconds: 60
 log:
   level: info
+timezone: Asia/Shanghai

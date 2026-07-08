@@ -10,12 +10,18 @@ import (
 
 type Config struct {
 	Mode     string   `yaml:"mode"`
+	Address  string   `yaml:"address"`
 	Port     string   `yaml:"port"`
+	BaseURI  string   `yaml:"base_uri"`
+	Domain   string   `yaml:"domain"`
+	PanelURI string   `yaml:"panel_uri"`
+	TLS      TLS      `yaml:"tls"`
 	Database Database `yaml:"database"`
 	JWT      JWT      `yaml:"jwt"`
 	Admin    Admin    `yaml:"admin"`
 	Agent    Agent    `yaml:"agent"`
 	Log      Log      `yaml:"log"`
+	Timezone string   `yaml:"timezone"`
 }
 
 type Database struct {
@@ -25,6 +31,11 @@ type Database struct {
 type JWT struct {
 	Secret      string `yaml:"secret"`
 	ExpireHours int    `yaml:"expire_hours"`
+}
+
+type TLS struct {
+	CertPath string `yaml:"cert_path"`
+	KeyPath  string `yaml:"key_path"`
 }
 
 type Admin struct {
@@ -45,7 +56,9 @@ type Log struct {
 func Load(path string) (*Config, error) {
 	cfg := &Config{
 		Mode:     "master",
+		Address:  "",
 		Port:     "8080",
+		BaseURI:  "/",
 		Database: Database{Path: "./panel.db"},
 		JWT:      JWT{ExpireHours: 24},
 		Agent: Agent{
@@ -53,7 +66,8 @@ func Load(path string) (*Config, error) {
 			DefaultMode:             "auto",
 			HeartbeatTimeoutSeconds: 60,
 		},
-		Log: Log{Level: "info"},
+		Log:      Log{Level: "info"},
+		Timezone: "Asia/Shanghai",
 	}
 
 	if path == "" {
@@ -70,12 +84,47 @@ func Load(path string) (*Config, error) {
 	return cfg, nil
 }
 
+func Save(path string, cfg *Config) error {
+	if path == "" {
+		path = "./config.yaml"
+	}
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("marshal config: %w", err)
+	}
+	if err := os.WriteFile(path, data, 0600); err != nil {
+		return fmt.Errorf("write config: %w", err)
+	}
+	return nil
+}
+
 func applyEnv(cfg *Config) {
 	if v := os.Getenv("BSDOCK_MODE"); v != "" {
 		cfg.Mode = v
 	}
+	if v := os.Getenv("BSDOCK_ADDRESS"); v != "" {
+		cfg.Address = v
+	}
 	if v := os.Getenv("BSDOCK_PORT"); v != "" {
 		cfg.Port = v
+	}
+	if v := os.Getenv("BSDOCK_BASE_URI"); v != "" {
+		cfg.BaseURI = v
+	}
+	if v := os.Getenv("BSDOCK_DOMAIN"); v != "" {
+		cfg.Domain = v
+	}
+	if v := os.Getenv("BSDOCK_PANEL_URI"); v != "" {
+		cfg.PanelURI = v
+	}
+	if v := os.Getenv("BSDOCK_TLS_CERT_PATH"); v != "" {
+		cfg.TLS.CertPath = v
+	}
+	if v := os.Getenv("BSDOCK_TLS_KEY_PATH"); v != "" {
+		cfg.TLS.KeyPath = v
+	}
+	if v := os.Getenv("BSDOCK_TIMEZONE"); v != "" {
+		cfg.Timezone = v
 	}
 	if v := os.Getenv("BSDOCK_DB_PATH"); v != "" {
 		cfg.Database.Path = v

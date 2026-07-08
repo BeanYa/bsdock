@@ -1,5 +1,5 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { ChevronLeft, ChevronRight, Home, ScrollText, Server, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Home, ScrollText, Server, Settings, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -14,6 +14,7 @@ const navItems = [
   { to: '/', label: 'Home', icon: Home },
   { to: '/nodes', label: 'Nodes', icon: Server },
   { to: '/logs', label: 'Logs', icon: ScrollText },
+  { to: '/settings', label: 'Settings', icon: Settings },
 ]
 
 function NavLinks({ collapsed, onClick }: { collapsed?: boolean; onClick?: () => void }) {

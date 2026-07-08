@@ -87,6 +87,96 @@ describe('api', () => {
     })
   })
 
+  describe('settings', () => {
+    it('loads panel settings', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ port: '8080', base_uri: '/', restart_hint: true }),
+      } as Response)
+      globalThis.fetch = fetchMock
+
+      const result = await api.getSettings()
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/v1/settings',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer test-token',
+          }),
+        })
+      )
+      expect(result.port).toBe('8080')
+    })
+
+    it('saves panel settings', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ port: '10443', base_uri: '/beanuai/' }),
+      } as Response)
+      globalThis.fetch = fetchMock
+
+      await api.saveSettings({
+        address: '127.0.0.1',
+        port: '10443',
+        base_uri: '/beanuai/',
+        domain: 'panel.example.com',
+        panel_uri: 'https://panel.example.com/beanuai/',
+        tls_cert_path: '/cert/fullchain.pem',
+        tls_key_path: '/cert/privkey.pem',
+        timezone: 'UTC',
+      })
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/v1/settings',
+        expect.objectContaining({
+          method: 'PUT',
+          body: JSON.stringify({
+            address: '127.0.0.1',
+            port: '10443',
+            base_uri: '/beanuai/',
+            domain: 'panel.example.com',
+            panel_uri: 'https://panel.example.com/beanuai/',
+            tls_cert_path: '/cert/fullchain.pem',
+            tls_key_path: '/cert/privkey.pem',
+            timezone: 'UTC',
+          }),
+        })
+      )
+    })
+
+    it('requests an acme certificate', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          domain: 'panel.example.com',
+          tls_cert_path: 'cert/panel.example.com/fullchain.pem',
+          tls_key_path: 'cert/panel.example.com/privkey.pem',
+        }),
+      } as Response)
+      globalThis.fetch = fetchMock
+
+      const result = await api.requestAcmeCertificate({
+        domain: 'panel.example.com',
+        email: 'admin@example.com',
+      })
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/v1/settings/acme',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            domain: 'panel.example.com',
+            email: 'admin@example.com',
+          }),
+        })
+      )
+      expect(result.tls_cert_path).toContain('fullchain.pem')
+    })
+  })
+
   describe('logPageView', () => {
     it('posts page view events with auth', async () => {
       const fetchMock = vi.fn().mockResolvedValue({

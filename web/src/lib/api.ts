@@ -79,6 +79,30 @@ export interface PanelStatus {
   }
 }
 
+export interface PanelSettings {
+  address: string
+  port: string
+  base_uri: string
+  domain: string
+  panel_uri: string
+  tls_cert_path: string
+  tls_key_path: string
+  timezone: string
+  restart_hint?: boolean
+}
+
+export interface AcmeCertificateRequest {
+  domain: string
+  email?: string
+  http_port?: string
+}
+
+export interface AcmeCertificateResponse {
+  domain: string
+  tls_cert_path: string
+  tls_key_path: string
+}
+
 export const api = {
   login: (username: string, password: string) =>
     request('/login', {
@@ -118,4 +142,15 @@ export const api = {
     })
   },
   getPanelStatus: () => request('/panel/status') as Promise<PanelStatus>,
+  getSettings: () => request('/settings') as Promise<PanelSettings>,
+  saveSettings: (settings: PanelSettings) =>
+    request('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    }) as Promise<PanelSettings>,
+  requestAcmeCertificate: (payload: AcmeCertificateRequest) =>
+    request('/settings/acme', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }) as Promise<AcmeCertificateResponse>,
 }

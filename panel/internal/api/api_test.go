@@ -256,6 +256,22 @@ func TestStaticHandler(t *testing.T) {
 	}
 }
 
+func TestStaticHandlerFallsBackForSPARoutes(t *testing.T) {
+	handler, err := StaticHandler()
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := httptest.NewRequest("GET", "/settings", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "BSDock Panel") {
+		t.Fatal("expected static index.html content")
+	}
+}
+
 func TestStaticFilesArePublic(t *testing.T) {
 	_, cfg, _ := setupAuthTest(t)
 

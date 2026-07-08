@@ -132,6 +132,9 @@ func main() {
 	authHandler := api.NewAuthHandler(queries, cfg)
 	apiRouter.HandleFunc("/login", authHandler.Login).Methods("POST")
 
+	settingsHandler := api.NewSettingsHandler(cfg, "./config.yaml", filepath.Join(".", "cert"), nil)
+	settingsHandler.Register(apiRouter)
+
 	nodesHandler := api.NewNodesHandler(nodeSvc, cfg)
 	nodesHandler.Register(apiRouter)
 
@@ -162,13 +165,19 @@ func main() {
 	log.Printf("panel routes registered request_logging=true frontend_ws=true logs_ws=true page_events=true")
 
 	srv := &http.Server{
-		Addr:    ":" + cfg.Port,
+		Addr:    serverAddress(cfg),
 		Handler: r,
 	}
 
 	go func() {
 		log.Printf("panel listening on %s", srv.Addr)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		var err error
+		if tlsEnabled(cfg) {
+			err = srv.ListenAndServeTLS(cfg.TLS.CertPath, cfg.TLS.KeyPath)
+		} else {
+			err = srv.ListenAndServe()
+		}
+		if err != nil && err != http.ErrServerClosed {
 			log.Fatalf("listen: %v", err)
 		}
 	}()
@@ -184,6 +193,17 @@ func main() {
 		log.Fatalf("shutdown: %v", err)
 	}
 	log.Printf("panel stopped")
+}
+
+func serverAddress(cfg *config.Config) string {
+	if cfg.Address == "" {
+		return ":" + cfg.Port
+	}
+	return cfg.Address + ":" + cfg.Port
+}
+
+func tlsEnabled(cfg *config.Config) bool {
+	return cfg.TLS.CertPath != "" && cfg.TLS.KeyPath != ""
 }
 
 func setupLogging() (io.Closer, *log.Logger, *rotlog.RotatingFileWriter, error) {
